@@ -130,16 +130,16 @@ export const VideoCall: React.FC = () => {
       const answer = await participant.peerConnection.createAnswer();
       await participant.peerConnection.setLocalDescription(answer);
 
-        supabase.channel('video-calls').send({
-          type: 'broadcast',
-          event: 'call-answer',
-          payload: {
-            callId: callState.callId,
-            to: payload.from.id,
-            from: user,
-            answer,
-          },
-        });
+      supabase.channel('video-calls').send({
+        type: 'broadcast',
+        event: 'call-answer',
+        payload: {
+          callId: callState.callId,
+          to: payload.from.id,
+          from: user,
+          answer,
+        },
+      });
     }
   };
 
@@ -238,18 +238,16 @@ export const VideoCall: React.FC = () => {
 
       // Send invitations to all participants
       for (const member of targetMembers) {
-        {
-          supabase.channel('video-calls').send({
-            type: 'broadcast',
-            event: 'call-invite',
-            payload: {
-              to: member.id,
-              from: user,
-              callId,
-              isGroup: targetMembers.length > 1,
-            },
-          });
-        }
+        supabase.channel('video-calls').send({
+          type: 'broadcast',
+          event: 'call-invite',
+          payload: {
+            to: member.id,
+            from: user,
+            callId,
+            isGroup: targetMembers.length > 1,
+          },
+        });
       }
 
       // Create offers for each participant
@@ -257,18 +255,16 @@ export const VideoCall: React.FC = () => {
         const offer = await participant.peerConnection.createOffer();
         await participant.peerConnection.setLocalDescription(offer);
 
-        {
-          supabase.channel('video-calls').send({
-            type: 'broadcast',
-            event: 'call-offer',
-            payload: {
-              callId,
-              to: memberId,
-              from: user,
-              offer,
-            },
-          });
-        }
+        supabase.channel('video-calls').send({
+          type: 'broadcast',
+          event: 'call-offer',
+          payload: {
+            callId,
+            to: memberId,
+            from: user,
+            offer,
+          },
+        });
       }
 
       // Display local video
@@ -373,32 +369,31 @@ export const VideoCall: React.FC = () => {
     });
 
     // Send invitation
-    {
-      supabase.channel('video-calls').send({
-        type: 'broadcast',
-        event: 'call-invite',
-        payload: {
-          to: member.id,
-          from: user,
-          callId: callState.callId,
-          isGroup: true,
-        },
-      });
+    supabase.channel('video-calls').send({
+      type: 'broadcast',
+      event: 'call-invite',
+      payload: {
+        to: member.id,
+        from: user,
+        callId: callState.callId,
+        isGroup: true,
+      },
+    });
 
-      // Create and send offer
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
+    // Create and send offer
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
 
-      supabase.channel('video-calls').send({
-        type: 'broadcast',
-        event: 'call-offer',
-        payload: {
-          callId: callState.callId,
-          to: member.id,
-          from: user,
-          offer,
-        },
-      });
+    supabase.channel('video-calls').send({
+      type: 'broadcast',
+      event: 'call-offer',
+      payload: {
+        callId: callState.callId,
+        to: member.id,
+        from: user,
+        offer,
+      },
+    });
   };
 
   const copyCallId = () => {
@@ -492,6 +487,7 @@ export const VideoCall: React.FC = () => {
           participantId: user?.id,
         },
       });
+    }
 
     cleanup();
   };
@@ -527,15 +523,14 @@ export const VideoCall: React.FC = () => {
   };
 
   const removeParticipantFromCall = (participantId: string) => {
-    {
-      supabase.channel('video-calls').send({
-        type: 'broadcast',
-        event: 'participant-left',
-        payload: {
-          callId: callState.callId,
-          participantId,
-        },
-      });
+    supabase.channel('video-calls').send({
+      type: 'broadcast',
+      event: 'participant-left',
+      payload: {
+        callId: callState.callId,
+        participantId,
+      },
+    });
 
     removeParticipant(participantId);
   };
