@@ -24,7 +24,7 @@ export const VideoCall: React.FC = () => {
     callId: null,
     participants: new Map(),
     localStream: null,
-  }, [callState.participants]);
+  });
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [cameraHidden, setCameraHidden] = useState(false);
