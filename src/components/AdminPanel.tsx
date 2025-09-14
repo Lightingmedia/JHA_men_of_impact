@@ -94,16 +94,32 @@ export const AdminPanel: React.FC = () => {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Handle demo mode - simulate adding member
-    if (user?.id === 'admin-bypass-id') {
-      // In demo mode, just show success message and reset form
-      setNewMember({ phone: '', full_name: '', is_admin: false });
-      setShowAddForm(false);
-      alert('Member would be added successfully! (Demo mode - connect to Supabase for real functionality)');
-      return;
-    }
-
     try {
+      // Handle demo mode - simulate adding member
+      if (user?.id === 'admin-bypass-id') {
+        // Create a mock member for demo purposes
+        const mockMember = {
+          id: `demo-member-${Date.now()}`,
+          phone: newMember.phone,
+          full_name: newMember.full_name,
+          profile_picture_url: undefined,
+          birth_month: undefined,
+          birth_day: undefined,
+          is_admin: newMember.is_admin,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        
+        // Add to local state for demo
+        setMembers(prev => [mockMember, ...prev]);
+        setNewMember({ phone: '', full_name: '', is_admin: false });
+        setShowAddForm(false);
+        alert('Member added successfully! (Demo mode - this member is only visible in this session)');
+        return;
+      }
+
+      // Real database operation
       const { error } = await supabase
         .from('members')
         .insert([newMember]);
@@ -116,7 +132,7 @@ export const AdminPanel: React.FC = () => {
       alert('Member added successfully!');
     } catch (error) {
       console.error('Error adding member:', error);
-      alert(`Error adding member: ${error instanceof Error ? error.message : 'Please try again.'}`);
+      alert(`Error adding member: ${error instanceof Error ? error.message : 'Please check your database connection and try again.'}`);
     }
   };
 
