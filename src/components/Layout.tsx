@@ -14,13 +14,21 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChang
   const { isDark, toggleTheme } = useTheme();
 
   const tabs = [
-    { id: 'directory', label: 'Members', icon: Users },
+    { id: 'directory', label: 'Members', icon: Users, disabled: true },
     { id: 'calendar', label: 'Birthdays', icon: Calendar },
     { id: 'calls', label: 'Video Calls', icon: Video },
     { id: 'preview', label: 'Preview', icon: Settings },
     { id: 'profile', label: 'Profile', icon: User },
-    ...(user?.is_admin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : []),
+    ...(user?.is_admin ? [{ id: 'admin', label: 'Admin', icon: Settings, disabled: false }] : []),
   ];
+
+  const handleTabClick = (tab: { id: string; disabled?: boolean }) => {
+    // Don't allow navigation to disabled tabs
+    if (tab.disabled) {
+      return;
+    }
+    onTabChange(tab.id);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -73,20 +81,30 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChang
       <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
-            {tabs.map(({ id, label, icon: Icon }) => (
+            {tabs.map((tab) => {
+              const { id, label, icon: Icon, disabled = false } = tab;
+              return (
               <button
                 key={id}
-                onClick={() => onTabChange(id)}
+                onClick={() => handleTabClick(tab)}
+                disabled={disabled}
+                aria-disabled={disabled}
                 className={`flex items-center space-x-2 py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                  disabled
+                    ? 'border-transparent text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
                   currentTab === id
                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                    : disabled
+                    ? 'border-transparent text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
                 }`}
+                title={disabled ? `${label} - Currently disabled` : label}
               >
-                <Icon size={18} />
+                <Icon size={18} className={disabled ? 'opacity-60' : ''} />
                 <span>{label}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       </nav>
