@@ -141,6 +141,18 @@ export const AdminPanel: React.FC = () => {
       { phone: '1234567816', full_name: 'Ubendu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
       { phone: '1234567817', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
       { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
+      { phone: '1234567807', full_name: 'Friday, Edia', birth_month: 2, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '1234567808', full_name: 'Kelvin, Oghogh', birth_month: 5, birth_day: 28, is_admin: false, is_active: true },
+      { phone: '1234567809', full_name: 'Monday, Udoh', birth_month: 8, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '1234567810', full_name: 'Nick, Agbo', birth_month: 4, birth_day: 11, is_admin: false, is_active: true },
+      { phone: '1234567811', full_name: 'Philip, Dika', birth_month: 6, birth_day: 9, is_admin: false, is_active: true },
+      { phone: '1234567812', full_name: 'Sola, Soneye', birth_month: 1, birth_day: 8, is_admin: false, is_active: true },
+      { phone: '1234567813', full_name: 'Suo, Adidi', birth_month: 8, birth_day: 7, is_admin: false, is_active: true },
+      { phone: '1234567814', full_name: 'Teddy, Chilaka', birth_month: 4, birth_day: 4, is_admin: false, is_active: true },
+      { phone: '1234567815', full_name: 'Tiwalolu, Adebote', birth_month: 10, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567816', full_name: 'Ubendu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
+      { phone: '1234567817', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
     ];
 
     if (!confirm(`Are you sure you want to add all ${membersToAdd.length} members? This will add them to the database.`)) {
