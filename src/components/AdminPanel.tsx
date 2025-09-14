@@ -8,6 +8,14 @@ export const AdminPanel: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editForm, setEditForm] = useState({
+    phone: '',
+    full_name: '',
+    birth_month: '',
+    birth_day: '',
+    is_admin: false,
+  });
   const [newMember, setNewMember] = useState({
     phone: '',
     full_name: '',
@@ -51,6 +59,65 @@ export const AdminPanel: React.FC = () => {
     } catch (error) {
       console.error('Error adding member:', error);
       alert(`Error adding member: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+    }
+  };
+
+  const startEditing = (member: Member) => {
+    setEditingMember(member);
+    setEditForm({
+      phone: member.phone,
+      full_name: member.full_name,
+      birth_month: member.birth_month?.toString() || '',
+      birth_day: member.birth_day?.toString() || '',
+      is_admin: member.is_admin,
+    });
+  };
+
+  const handleEditMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    
+    try {
+      const { error } = await supabase
+        .from('members')
+        .update({
+          phone: editForm.phone,
+          full_name: editForm.full_name,
+          birth_month: editForm.birth_month ? parseInt(editForm.birth_month) : null,
+          birth_day: editForm.birth_day ? parseInt(editForm.birth_day) : null,
+          is_admin: editForm.is_admin,
+        })
+        .eq('id', editingMember.id);
+
+      if (error) throw error;
+
+      setEditingMember(null);
+      fetchAllMembers();
+      alert('Member updated successfully!');
+    } catch (error) {
+      console.error('Error updating member:', error);
+      alert(`Error updating member: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+    }
+  };
+
+  const deleteMember = async (memberId: string, memberName: string) => {
+    if (!confirm(`Are you sure you want to delete ${memberName}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+      
+      fetchAllMembers();
+      alert('Member deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      alert('Error deleting member.');
     }
   };
 
@@ -132,6 +199,24 @@ export const AdminPanel: React.FC = () => {
 
   const activeMembers = members.filter(m => m.is_active);
   const inactiveMembers = members.filter(m => !m.is_active);
+
+  const months = [
+    { value: '', label: 'Select Month' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+  ];
+
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
 
   return (
     <div className="space-y-8">
@@ -265,6 +350,111 @@ export const AdminPanel: React.FC = () => {
         </div>
       )}
 
+      {/* Edit Member Form */}
+      {editingMember && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Member</h3>
+              <button
+                onClick={() => setEditingMember(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditMember} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={editForm.full_name}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Birthday
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={editForm.birth_month}
+                    onChange={(e) => setEditForm({ ...editForm, birth_month: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    {months.map(month => (
+                      <option key={month.value} value={month.value}>
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={editForm.birth_day}
+                    onChange={(e) => setEditForm({ ...editForm, birth_day: e.target.value })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={!editForm.birth_month}
+                  >
+                    <option value="">Select Day</option>
+                    {days.map(day => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="edit_is_admin"
+                  checked={editForm.is_admin}
+                  onChange={(e) => setEditForm({ ...editForm, is_admin: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="edit_is_admin" className="ml-2 text-sm text-gray-700">
+                  Administrator privileges
+                </label>
+              </div>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  Update Member
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Members List */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
@@ -280,6 +470,9 @@ export const AdminPanel: React.FC = () => {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Phone
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Birthday
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -302,6 +495,14 @@ export const AdminPanel: React.FC = () => {
                     <div className="text-sm text-gray-600">{member.phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-600">
+                      {member.birth_month && member.birth_day 
+                        ? `${months.find(m => m.value === member.birth_month?.toString())?.label} ${member.birth_day}`
+                        : 'Not set'
+                      }
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       member.is_active 
                         ? 'bg-green-100 text-green-800' 
@@ -322,6 +523,14 @@ export const AdminPanel: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <button
+                        onClick={() => startEditing(member)}
+                        className="px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded text-xs font-medium transition-colors flex items-center space-x-1"
+                      >
+                        <Edit size={12} />
+                        <span>Edit</span>
+                      </button>
+                      
+                      <button
                         onClick={() => toggleMemberStatus(member.id, member.is_active)}
                         className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                           member.is_active
@@ -341,6 +550,14 @@ export const AdminPanel: React.FC = () => {
                         }`}
                       >
                         {member.is_admin ? 'Remove Admin' : 'Make Admin'}
+                      </button>
+                      
+                      <button
+                        onClick={() => deleteMember(member.id, member.full_name)}
+                        className="px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded text-xs font-medium transition-colors flex items-center space-x-1"
+                      >
+                        <Trash2 size={12} />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </td>
