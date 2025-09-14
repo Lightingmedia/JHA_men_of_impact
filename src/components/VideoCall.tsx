@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, Member } from '../lib/supabase';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X, EyeOff, Eye } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X, EyeOff, Eye, UserPlus, Copy, Check } from 'lucide-react';
 
 interface CallState {
   isInCall: boolean;
-  isInitiator: boolean;
-  remoteUser: Member | null;
+  isGroupCall: boolean;
+  callId: string | null;
+  participants: Map<string, {
+    member: Member;
+    stream: MediaStream | null;
+    peerConnection: RTCPeerConnection | null;
+  }>;
   localStream: MediaStream | null;
-  remoteStream: MediaStream | null;
-  peerConnection: RTCPeerConnection | null;
 }
 
 export const VideoCall: React.FC = () => {
@@ -17,22 +20,25 @@ export const VideoCall: React.FC = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [callState, setCallState] = useState<CallState>({
     isInCall: false,
-    isInitiator: false,
-    remoteUser: null,
+    isGroupCall: false,
+    callId: null,
+    participants: new Map(),
     localStream: null,
-    remoteStream: null,
-    peerConnection: null,
   });
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [cameraHidden, setCameraHidden] = useState(false);
+  const [showGroupCallModal, setShowGroupCallModal] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
+  const [callIdCopied, setCallIdCopied] = useState(false);
   const [incomingCall, setIncomingCall] = useState<{
     from: Member;
-    offer: RTCSessionDescriptionInit;
+    callId: string;
+    isGroup: boolean;
   } | null>(null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const participantVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
   // WebRTC configuration
   const rtcConfig = {
@@ -107,27 +113,38 @@ export const VideoCall: React.FC = () => {
     // Set up Supabase real-time for signaling
     const channel = supabase
       .channel('video-calls')
-      .on('broadcast', { event: 'call-offer' }, (payload) => {
+      .on('broadcast', { event: 'call-invite' }, (payload) => {
         if (payload.payload.to === user?.id) {
           setIncomingCall({
             from: payload.payload.from,
-            offer: payload.payload.offer,
+            callId: payload.payload.callId,
+            isGroup: payload.payload.isGroup,
           });
         }
       })
+      .on('broadcast', { event: 'call-offer' }, (payload) => {
+        if (payload.payload.callId === callState.callId && payload.payload.to === user?.id) {
+          handleRemoteOffer(payload.payload);
+        }
+      })
       .on('broadcast', { event: 'call-answer' }, (payload) => {
-        if (payload.payload.to === user?.id && callState.peerConnection) {
-          callState.peerConnection.setRemoteDescription(payload.payload.answer);
+        if (payload.payload.callId === callState.callId && payload.payload.to === user?.id) {
+          handleRemoteAnswer(payload.payload);
         }
       })
       .on('broadcast', { event: 'ice-candidate' }, (payload) => {
-        if (payload.payload.to === user?.id && callState.peerConnection) {
-          callState.peerConnection.addIceCandidate(payload.payload.candidate);
+        if (payload.payload.callId === callState.callId && payload.payload.to === user?.id) {
+          handleRemoteIceCandidate(payload.payload);
         }
       })
       .on('broadcast', { event: 'call-end' }, (payload) => {
-        if (payload.payload.to === user?.id) {
+        if (payload.payload.callId === callState.callId) {
           endCall();
+        }
+      })
+      .on('broadcast', { event: 'participant-left' }, (payload) => {
+        if (payload.payload.callId === callState.callId) {
+          removeParticipant(payload.payload.participantId);
         }
       })
       .subscribe();
@@ -137,73 +154,163 @@ export const VideoCall: React.FC = () => {
     };
   };
 
+  const handleRemoteOffer = async (payload: any) => {
+    const participant = callState.participants.get(payload.from.id);
+    if (participant?.peerConnection) {
+      await participant.peerConnection.setRemoteDescription(payload.offer);
+      const answer = await participant.peerConnection.createAnswer();
+      await participant.peerConnection.setLocalDescription(answer);
+
+      if (user?.id !== 'admin-bypass-id') {
+        supabase.channel('video-calls').send({
+          type: 'broadcast',
+          event: 'call-answer',
+          payload: {
+            callId: callState.callId,
+            to: payload.from.id,
+            from: user,
+            answer,
+          },
+        });
+      }
+    }
+  };
+
+  const handleRemoteAnswer = async (payload: any) => {
+    const participant = callState.participants.get(payload.from.id);
+    if (participant?.peerConnection) {
+      await participant.peerConnection.setRemoteDescription(payload.answer);
+    }
+  };
+
+  const handleRemoteIceCandidate = async (payload: any) => {
+    const participant = callState.participants.get(payload.from.id);
+    if (participant?.peerConnection) {
+      await participant.peerConnection.addIceCandidate(payload.candidate);
+    }
+  };
+
+  const removeParticipant = (participantId: string) => {
+    setCallState(prev => {
+      const newParticipants = new Map(prev.participants);
+      const participant = newParticipants.get(participantId);
+      if (participant?.peerConnection) {
+        participant.peerConnection.close();
+      }
+      newParticipants.delete(participantId);
+      return { ...prev, participants: newParticipants };
+    });
+  };
+
   const startCall = async (targetMember: Member) => {
+    await startGroupCall([targetMember]);
+  };
+
+  const startGroupCall = async (targetMembers: Member[]) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       });
 
-      const peerConnection = new RTCPeerConnection(rtcConfig);
+      const callId = `call-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const participants = new Map();
 
-      // Add local stream to peer connection
-      stream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, stream);
-      });
+      // Create peer connections for each participant
+      for (const member of targetMembers) {
+        const peerConnection = new RTCPeerConnection(rtcConfig);
+        
+        // Add local stream to peer connection
+        stream.getTracks().forEach(track => {
+          peerConnection.addTrack(track, stream);
+        });
 
-      // Handle remote stream
-      peerConnection.ontrack = (event) => {
-        setCallState(prev => ({
-          ...prev,
-          remoteStream: event.streams[0],
-        }));
-      };
-
-      // Handle ICE candidates
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate && user?.id !== 'admin-bypass-id') {
-          supabase.channel('video-calls').send({
-            type: 'broadcast',
-            event: 'ice-candidate',
-            payload: {
-              to: targetMember.id,
-              from: user,
-              candidate: event.candidate,
-            },
+        // Handle remote stream
+        peerConnection.ontrack = (event) => {
+          setCallState(prev => {
+            const newParticipants = new Map(prev.participants);
+            const participant = newParticipants.get(member.id);
+            if (participant) {
+              participant.stream = event.streams[0];
+              newParticipants.set(member.id, participant);
+            }
+            return { ...prev, participants: newParticipants };
           });
-        }
-      };
+        };
 
-      // Create offer
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
+        // Handle ICE candidates
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate && user?.id !== 'admin-bypass-id') {
+            supabase.channel('video-calls').send({
+              type: 'broadcast',
+              event: 'ice-candidate',
+              payload: {
+                callId,
+                to: member.id,
+                from: user,
+                candidate: event.candidate,
+              },
+            });
+          }
+        };
 
-      // Send offer through signaling
-      if (user?.id !== 'admin-bypass-id') {
-        supabase.channel('video-calls').send({
-          type: 'broadcast',
-          event: 'call-offer',
-          payload: {
-            to: targetMember.id,
-            from: user,
-            offer,
-          },
+        participants.set(member.id, {
+          member,
+          stream: null,
+          peerConnection,
         });
       }
 
       setCallState({
         isInCall: true,
-        isInitiator: true,
-        remoteUser: targetMember,
+        isGroupCall: targetMembers.length > 1,
+        callId,
+        participants,
         localStream: stream,
-        remoteStream: null,
-        peerConnection,
       });
+
+      // Send invitations to all participants
+      for (const member of targetMembers) {
+        if (user?.id !== 'admin-bypass-id') {
+          supabase.channel('video-calls').send({
+            type: 'broadcast',
+            event: 'call-invite',
+            payload: {
+              to: member.id,
+              from: user,
+              callId,
+              isGroup: targetMembers.length > 1,
+            },
+          });
+        }
+      }
+
+      // Create offers for each participant
+      for (const [memberId, participant] of participants) {
+        const offer = await participant.peerConnection.createOffer();
+        await participant.peerConnection.setLocalDescription(offer);
+
+        if (user?.id !== 'admin-bypass-id') {
+          supabase.channel('video-calls').send({
+            type: 'broadcast',
+            event: 'call-offer',
+            payload: {
+              callId,
+              to: memberId,
+              from: user,
+              offer,
+            },
+          });
+        }
+      }
 
       // Display local video
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
+
+      setShowGroupCallModal(false);
+      setSelectedMembers(new Set());
 
     } catch (error) {
       console.error('Error starting call:', error);
@@ -220,61 +327,13 @@ export const VideoCall: React.FC = () => {
         audio: true,
       });
 
-      const peerConnection = new RTCPeerConnection(rtcConfig);
-
-      // Add local stream
-      stream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, stream);
-      });
-
-      // Handle remote stream
-      peerConnection.ontrack = (event) => {
-        setCallState(prev => ({
-          ...prev,
-          remoteStream: event.streams[0],
-        }));
-      };
-
-      // Handle ICE candidates
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate && user?.id !== 'admin-bypass-id') {
-          supabase.channel('video-calls').send({
-            type: 'broadcast',
-            event: 'ice-candidate',
-            payload: {
-              to: incomingCall.from.id,
-              from: user,
-              candidate: event.candidate,
-            },
-          });
-        }
-      };
-
-      // Set remote description and create answer
-      await peerConnection.setRemoteDescription(incomingCall.offer);
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-
-      // Send answer
-      if (user?.id !== 'admin-bypass-id') {
-        supabase.channel('video-calls').send({
-          type: 'broadcast',
-          event: 'call-answer',
-          payload: {
-            to: incomingCall.from.id,
-            from: user,
-            answer,
-          },
-        });
-      }
-
+      // Join the existing call
       setCallState({
         isInCall: true,
-        isInitiator: false,
-        remoteUser: incomingCall.from,
+        isGroupCall: incomingCall.isGroup,
+        callId: incomingCall.callId,
+        participants: new Map(),
         localStream: stream,
-        remoteStream: null,
-        peerConnection,
       });
 
       setIncomingCall(null);
@@ -290,15 +349,138 @@ export const VideoCall: React.FC = () => {
     }
   };
 
+  const inviteToCall = async (member: Member) => {
+    if (!callState.isInCall || !callState.callId) return;
+
+    const peerConnection = new RTCPeerConnection(rtcConfig);
+    
+    // Add local stream to peer connection
+    if (callState.localStream) {
+      callState.localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, callState.localStream!);
+      });
+    }
+
+    // Handle remote stream
+    peerConnection.ontrack = (event) => {
+      setCallState(prev => {
+        const newParticipants = new Map(prev.participants);
+        const participant = newParticipants.get(member.id);
+        if (participant) {
+          participant.stream = event.streams[0];
+          newParticipants.set(member.id, participant);
+        }
+        return { ...prev, participants: newParticipants };
+      });
+    };
+
+    // Handle ICE candidates
+    peerConnection.onicecandidate = (event) => {
+      if (event.candidate && user?.id !== 'admin-bypass-id') {
+        supabase.channel('video-calls').send({
+          type: 'broadcast',
+          event: 'ice-candidate',
+          payload: {
+            callId: callState.callId,
+            to: member.id,
+            from: user,
+            candidate: event.candidate,
+          },
+        });
+      }
+    };
+
+    // Add participant to call state
+    setCallState(prev => {
+      const newParticipants = new Map(prev.participants);
+      newParticipants.set(member.id, {
+        member,
+        stream: null,
+        peerConnection,
+      });
+      return { 
+        ...prev, 
+        participants: newParticipants,
+        isGroupCall: true 
+      };
+    });
+
+    // Send invitation
+    if (user?.id !== 'admin-bypass-id') {
+      supabase.channel('video-calls').send({
+        type: 'broadcast',
+        event: 'call-invite',
+        payload: {
+          to: member.id,
+          from: user,
+          callId: callState.callId,
+          isGroup: true,
+        },
+      });
+
+      // Create and send offer
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      supabase.channel('video-calls').send({
+        type: 'broadcast',
+        event: 'call-offer',
+        payload: {
+          callId: callState.callId,
+          to: member.id,
+          from: user,
+          offer,
+        },
+      });
+    }
+  };
+
+  const copyCallId = () => {
+    if (callState.callId) {
+      navigator.clipboard.writeText(callState.callId);
+      setCallIdCopied(true);
+      setTimeout(() => setCallIdCopied(false), 2000);
+    }
+  };
+
+  const toggleMemberSelection = (memberId: string) => {
+    setSelectedMembers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(memberId)) {
+        newSet.delete(memberId);
+      } else {
+        newSet.add(memberId);
+      }
+      return newSet;
+    });
+  };
+
+  const startSelectedGroupCall = () => {
+    const selectedMembersList = members.filter(m => selectedMembers.has(m.id));
+    if (selectedMembersList.length > 0) {
+      startGroupCall(selectedMembersList);
+    }
+  };
+
   const endCall = () => {
     // Send end call signal
-    if (callState.remoteUser && user?.id !== 'admin-bypass-id') {
+    if (callState.callId && user?.id !== 'admin-bypass-id') {
       supabase.channel('video-calls').send({
         type: 'broadcast',
         event: 'call-end',
         payload: {
-          to: callState.remoteUser.id,
+          callId: callState.callId,
           from: user,
+        },
+      });
+
+      // Notify about leaving
+      supabase.channel('video-calls').send({
+        type: 'broadcast',
+        event: 'participant-left',
+        payload: {
+          callId: callState.callId,
+          participantId: user?.id,
         },
       });
     }
@@ -312,22 +494,79 @@ export const VideoCall: React.FC = () => {
       callState.localStream.getTracks().forEach(track => track.stop());
     }
 
-    // Close peer connection
-    if (callState.peerConnection) {
-      callState.peerConnection.close();
-    }
+    // Close all peer connections
+    callState.participants.forEach(participant => {
+      if (participant.peerConnection) {
+        participant.peerConnection.close();
+      }
+    });
+
+    // Clear video refs
+    participantVideoRefs.current.clear();
 
     // Reset state
     setCallState({
       isInCall: false,
-      isInitiator: false,
-      remoteUser: null,
+      isGroupCall: false,
+      callId: null,
+      participants: new Map(),
       localStream: null,
-      remoteStream: null,
-      peerConnection: null,
     });
 
     setIncomingCall(null);
+    setShowGroupCallModal(false);
+    setSelectedMembers(new Set());
+  };
+
+  const removeParticipantFromCall = (participantId: string) => {
+    if (user?.id !== 'admin-bypass-id') {
+      supabase.channel('video-calls').send({
+        type: 'broadcast',
+        event: 'participant-left',
+        payload: {
+          callId: callState.callId,
+          participantId,
+        },
+      });
+    }
+
+    removeParticipant(participantId);
+  };
+
+  const getParticipantVideoRef = (participantId: string) => {
+    if (!participantVideoRefs.current.has(participantId)) {
+      const videoElement = document.createElement('video');
+      videoElement.autoplay = true;
+      videoElement.playsInline = true;
+      participantVideoRefs.current.set(participantId, videoElement);
+    }
+    return participantVideoRefs.current.get(participantId);
+  };
+
+  // Update participant videos when streams change
+  useEffect(() => {
+    callState.participants.forEach((participant, participantId) => {
+      if (participant.stream) {
+        const videoElement = getParticipantVideoRef(participantId);
+        if (videoElement && videoElement.srcObject !== participant.stream) {
+          videoElement.srcObject = participant.stream;
+        }
+      }
+    });
+  }, [callState.participants]);
+
+  const availableMembers = members.filter(member => 
+    !callState.participants.has(member.id)
+  );
+
+  const participantsList = Array.from(callState.participants.values());
+
+  const getGridClass = (count: number) => {
+    if (count === 1) return 'grid-cols-1';
+    if (count === 2) return 'grid-cols-2';
+    if (count <= 4) return 'grid-cols-2';
+    if (count <= 6) return 'grid-cols-3';
+    return 'grid-cols-4';
   };
 
   const toggleVideo = () => {
@@ -354,25 +593,40 @@ export const VideoCall: React.FC = () => {
     setCameraHidden(!cameraHidden);
   };
 
-  // Update remote video when stream changes
-  useEffect(() => {
-    if (remoteVideoRef.current && callState.remoteStream) {
-      remoteVideoRef.current.srcObject = callState.remoteStream;
-    }
-  }, [callState.remoteStream]);
-
   if (callState.isInCall) {
     return (
       <div className="fixed inset-0 bg-black z-50 flex flex-col">
         {/* Video Container */}
         <div className="flex-1 relative">
-          {/* Remote Video */}
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          {/* Participants Grid */}
+          <div className={`grid ${getGridClass(participantsList.length)} gap-2 h-full p-4`}>
+            {participantsList.map((participant) => (
+              <div key={participant.member.id} className="relative bg-gray-900 rounded-lg overflow-hidden">
+                <video
+                  ref={(el) => {
+                    if (el && participant.stream) {
+                      el.srcObject = participant.stream;
+                    }
+                  }}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm">
+                  {participant.member.full_name}
+                </div>
+                {callState.isGroupCall && (
+                  <button
+                    onClick={() => removeParticipantFromCall(participant.member.id)}
+                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 transition-colors"
+                    title="Remove participant"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
           
           {/* Local Video (Picture-in-Picture) */}
           <div className={`absolute top-4 right-4 w-48 h-36 bg-gray-900 rounded-lg overflow-hidden border-2 border-white transition-opacity ${
@@ -394,11 +648,44 @@ export const VideoCall: React.FC = () => {
 
           {/* Call Info */}
           <div className="absolute top-4 left-4 bg-black/50 text-white px-4 py-2 rounded-lg">
-            <p className="font-medium">{callState.remoteUser?.full_name}</p>
+            <p className="font-medium">
+              {callState.isGroupCall 
+                ? `Group Call (${participantsList.length} participants)` 
+                : participantsList[0]?.member.full_name || 'Connecting...'
+              }
+            </p>
             <p className="text-sm opacity-75">
-              {callState.isInitiator ? 'Calling...' : 'In call'}
+              {callState.callId && (
+                <button onClick={copyCallId} className="hover:text-blue-300 transition-colors">
+                  Call ID: {callState.callId.slice(-8)} {callIdCopied ? '✓' : '📋'}
+                </button>
+              )}
             </p>
           </div>
+
+          {/* Invite Button for Group Calls */}
+          {callState.isGroupCall && availableMembers.length > 0 && (
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+              <select
+                onChange={(e) => {
+                  const member = members.find(m => m.id === e.target.value);
+                  if (member) {
+                    inviteToCall(member);
+                    e.target.value = '';
+                  }
+                }}
+                className="bg-black/50 text-white border border-white/20 rounded-lg px-3 py-1 text-sm"
+                defaultValue=""
+              >
+                <option value="" disabled>Invite member...</option>
+                {availableMembers.map(member => (
+                  <option key={member.id} value={member.id} className="bg-gray-800">
+                    {member.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Controls */}
@@ -458,6 +745,79 @@ export const VideoCall: React.FC = () => {
         <p className="text-gray-600">Connect with fellow members through video calls</p>
       </div>
 
+      {/* Group Call Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowGroupCallModal(true)}
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+        >
+          <UserPlus size={20} />
+          <span>Start Group Call</span>
+        </button>
+      </div>
+
+      {/* Group Call Setup Modal */}
+      {showGroupCallModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Start Group Call</h3>
+              <button
+                onClick={() => setShowGroupCallModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <p className="text-gray-600 mb-4">Select members to invite to the group call:</p>
+            
+            <div className="space-y-2 mb-6">
+              {members.map(member => (
+                <label key={member.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedMembers.has(member.id)}
+                    onChange={() => toggleMemberSelection(member.id)}
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <div className="flex items-center space-x-2">
+                    {member.profile_picture_url ? (
+                      <img
+                        src={member.profile_picture_url}
+                        alt={member.full_name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Users className="text-blue-600" size={16} />
+                      </div>
+                    )}
+                    <span className="text-gray-900">{member.full_name}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowGroupCallModal(false)}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={startSelectedGroupCall}
+                disabled={selectedMembers.size === 0}
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 text-white py-2 px-4 rounded-lg transition-colors"
+              >
+                Start Call ({selectedMembers.size})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Incoming Call Modal */}
       {incomingCall && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -468,10 +828,10 @@ export const VideoCall: React.FC = () => {
               </div>
               
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Incoming Call
+                {incomingCall.isGroup ? 'Incoming Group Call' : 'Incoming Call'}
               </h3>
               <p className="text-gray-600 mb-6">
-                {incomingCall.from.full_name} is calling you
+                {incomingCall.from.full_name} is {incomingCall.isGroup ? 'inviting you to a group call' : 'calling you'}
               </p>
 
               <div className="flex space-x-3">
@@ -564,7 +924,7 @@ export const VideoCall: React.FC = () => {
             <span className="text-yellow-800 font-medium">Demo Mode - Video Calling</span>
           </div>
           <p className="text-yellow-700 text-sm mt-1">
-            Video calling requires camera/microphone permissions and works between real members. 
+            Video calling supports both 1-on-1 and group calls. Features include participant management, call IDs, and real-time invitations. 
             Connect to Supabase and add members to test full functionality.
           </p>
         </div>
