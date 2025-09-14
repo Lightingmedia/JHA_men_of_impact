@@ -143,6 +143,10 @@ export const AdminPanel: React.FC = () => {
       { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
     ];
 
+    if (!confirm(`Are you sure you want to add all ${membersToAdd.length} members? This will add them to the database.`)) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('members')
@@ -154,7 +158,11 @@ export const AdminPanel: React.FC = () => {
       alert(`Successfully added ${membersToAdd.length} members!`);
     } catch (error) {
       console.error('Error adding members:', error);
-      alert(`Error adding members: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      if (error instanceof Error && error.message.includes('duplicate key')) {
+        alert('Some members may already exist. Please check the member list.');
+      } else {
+        alert(`Error adding members: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      }
     }
   };
   const toggleMemberStatus = async (memberId: string, currentStatus: boolean) => {
