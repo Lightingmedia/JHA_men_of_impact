@@ -138,7 +138,7 @@ export const AdminPanel: React.FC = () => {
       { phone: '1234567813', full_name: 'Suo, Adidi', birth_month: 8, birth_day: 7, is_admin: false, is_active: true },
       { phone: '1234567814', full_name: 'Teddy, Chilaka', birth_month: 4, birth_day: 4, is_admin: false, is_active: true },
       { phone: '1234567815', full_name: 'Tiwalolu, Adebote', birth_month: 10, birth_day: 30, is_admin: false, is_active: true },
-      { phone: '1234567816', full_name: 'Ubendu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
+      { phone: '1234567816', full_name: 'Ubedu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
       { phone: '1234567817', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
       { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
     ];

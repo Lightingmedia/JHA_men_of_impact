@@ -74,28 +74,28 @@ export const MemberDirectory: React.FC = () => {
       </div>
 
       {/* Members Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredMembers.map((member) => (
           <div
             key={member.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:scale-105"
           >
             {/* Profile Picture */}
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-6">
               <div className="relative">
                 {member.profile_picture_url ? (
                   <img
                     src={member.profile_picture_url}
                     alt={member.full_name}
-                    className="w-16 h-16 rounded-full object-cover ring-2 ring-blue-100"
+                    className="w-20 h-20 rounded-full object-cover ring-4 ring-blue-100"
                   />
                 ) : (
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center ring-2 ring-blue-200">
-                    <User className="text-blue-600" size={28} />
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
+                    <User className="text-blue-600" size={32} />
                   </div>
                 )}
                 {member.is_admin && (
-                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold ring-2 ring-white">
                     A
                   </div>
                 )}
@@ -103,23 +103,23 @@ export const MemberDirectory: React.FC = () => {
             </div>
 
             {/* Member Info */}
-            <div className="text-center space-y-3">
-              <h3 className="font-semibold text-gray-900">{member.full_name}</h3>
+            <div className="text-center space-y-4">
+              <h3 className="font-semibold text-gray-900 text-lg">{member.full_name}</h3>
               
-              <div className="space-y-2 text-sm text-gray-600">
+              <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-center justify-center space-x-2">
-                  <Phone size={16} />
+                  <Phone size={16} className="text-gray-400" />
                   <span>{member.phone}</span>
                 </div>
                 
                 <div className="flex items-center justify-center space-x-2">
-                  <Calendar size={16} />
+                  <Calendar size={16} className="text-gray-400" />
                   <span>{formatBirthday(member.birth_month, member.birth_day)}</span>
                 </div>
               </div>
 
               {member.is_admin && (
-                <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                   Administrator
                 </div>
               )}
