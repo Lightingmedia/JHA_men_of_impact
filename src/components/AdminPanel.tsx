@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Member } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, Edit, Trash2, Users, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, UserCheck, UserX, X } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
