@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Member } from '../lib/supabase';
+import { useAuth } from '../hooks/useAuth';
 import { Plus, Edit, Trash2, Users, UserCheck, UserX } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
+  const { user } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
