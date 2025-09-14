@@ -121,12 +121,6 @@ export const Login: React.FC = () => {
             <div className="mt-6 text-center text-sm text-gray-600">
               <p>Only pre-approved members can access this platform.</p>
               <p className="mt-2">Need access? Contact your group administrator.</p>
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-blue-800 font-medium text-sm">Initial Setup:</p>
-                <p className="text-blue-700 text-xs mt-1">
-                  Use phone number "9254343862" to create the first administrator account.
-                </p>
-              </div>
             </div>
           </div>
         </div>
