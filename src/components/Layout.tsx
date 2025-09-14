@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Users, Calendar, Settings, LogOut, User } from 'lucide-react';
+import { Users, Calendar, Settings, LogOut, User, Video } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,6 +14,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChang
   const tabs = [
     { id: 'directory', label: 'Members', icon: Users },
     { id: 'calendar', label: 'Birthdays', icon: Calendar },
+    { id: 'calls', label: 'Video Calls', icon: Video },
     { id: 'preview', label: 'Preview', icon: Settings },
     { id: 'profile', label: 'Profile', icon: User },
     ...(user?.is_admin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : []),
