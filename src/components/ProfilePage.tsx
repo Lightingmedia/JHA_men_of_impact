@@ -21,6 +21,13 @@ export const ProfilePage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Prevent Supabase operations in demo mode
+    if (user?.id === 'admin-bypass-id') {
+      alert('Profile updates are not available in demo mode. Connect to Supabase to enable full functionality.');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('members')
@@ -46,6 +53,12 @@ export const ProfilePage: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+
+    // Prevent Supabase operations in demo mode
+    if (user.id === 'admin-bypass-id') {
+      alert('Profile picture uploads are not available in demo mode. Connect to Supabase to enable full functionality.');
+      return;
+    }
 
     setUploading(true);
     try {
