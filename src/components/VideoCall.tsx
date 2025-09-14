@@ -277,7 +277,11 @@ export const VideoCall: React.FC = () => {
 
     } catch (error) {
       console.error('Error starting call:', error);
-      alert('Error accessing camera/microphone. Please check permissions.');
+      if (error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
+        alert('Camera/microphone access was denied. Please grant permission in your browser settings and try again.');
+      } else {
+        alert('Error accessing camera/microphone. Please check permissions.');
+      }
     }
   };
 
@@ -308,7 +312,11 @@ export const VideoCall: React.FC = () => {
 
     } catch (error) {
       console.error('Error answering call:', error);
-      alert('Error accessing camera/microphone. Please check permissions.');
+      if (error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
+        alert('Camera/microphone access was denied. Please grant permission in your browser settings and try again.');
+      } else {
+        alert('Error accessing camera/microphone. Please check permissions.');
+      }
     }
   };
 
