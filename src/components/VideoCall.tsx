@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, Member } from '../lib/supabase';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X, EyeOff, Eye, UserPlus, Copy, Check } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X, EyeOff, Eye, UserPlus, Copy, Check, Link, Share2, Calendar, Plus } from 'lucide-react';
 
 interface CallState {
   isInCall: boolean;
@@ -31,6 +31,12 @@ export const VideoCall: React.FC = () => {
   const [showGroupCallModal, setShowGroupCallModal] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
   const [callIdCopied, setCallIdCopied] = useState(false);
+  const [showMeetingModal, setShowMeetingModal] = useState(false);
+  const [meetingLink, setMeetingLink] = useState('');
+  const [meetingLinkCopied, setMeetingLinkCopied] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [incomingCall, setIncomingCall] = useState<{
     from: Member;
     callId: string;
@@ -443,6 +449,49 @@ export const VideoCall: React.FC = () => {
     }
   };
 
+  const generateMeetingLink = () => {
+    const meetingId = `meeting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/join/${meetingId}`;
+    setMeetingLink(link);
+    setShowMeetingModal(true);
+  };
+
+  const copyMeetingLink = () => {
+    navigator.clipboard.writeText(meetingLink);
+    setMeetingLinkCopied(true);
+    setTimeout(() => setMeetingLinkCopied(false), 2000);
+  };
+
+  const shareMeetingLink = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'JHA Men Of Impact - Video Call',
+        text: 'Join our video call',
+        url: meetingLink,
+      });
+    } else {
+      copyMeetingLink();
+    }
+  };
+
+  const addPhoneNumber = () => {
+    if (phoneNumber.trim() && !phoneNumbers.includes(phoneNumber.trim())) {
+      setPhoneNumbers([...phoneNumbers, phoneNumber.trim()]);
+      setPhoneNumber('');
+    }
+  };
+
+  const removePhoneNumber = (numberToRemove: string) => {
+    setPhoneNumbers(phoneNumbers.filter(num => num !== numberToRemove));
+  };
+
+  const inviteByPhone = (number: string) => {
+    const message = `Join our JHA Men Of Impact video call: ${meetingLink}`;
+    const smsUrl = `sms:${number}?body=${encodeURIComponent(message)}`;
+    window.open(smsUrl, '_blank');
+  };
+
   const toggleMemberSelection = (memberId: string) => {
     setSelectedMembers(prev => {
       const newSet = new Set(prev);
@@ -747,14 +796,161 @@ export const VideoCall: React.FC = () => {
 
       {/* Group Call Button */}
       <div className="flex justify-end">
-        <button
-          onClick={() => setShowGroupCallModal(true)}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
-        >
-          <UserPlus size={20} />
-          <span>Start Group Call</span>
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={generateMeetingLink}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+          >
+            <Link size={20} />
+            <span>Create Meeting Link</span>
+          </button>
+          <button
+            onClick={() => setShowGroupCallModal(true)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+          >
+            <UserPlus size={20} />
+            <span>Start Group Call</span>
+          </button>
+        </div>
       </div>
+
+      {/* Meeting Link Modal */}
+      {showMeetingModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Meeting Link Created</h3>
+              <button
+                onClick={() => setShowMeetingModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Meeting Link
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={meetingLink}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  />
+                  <button
+                    onClick={copyMeetingLink}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-1"
+                  >
+                    {meetingLinkCopied ? <Check size={16} /> : <Copy size={16} />}
+                    <span className="text-sm">{meetingLinkCopied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex space-x-2">
+                <button
+                  onClick={shareMeetingLink}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Share2 size={18} />
+                  <span>Share Link</span>
+                </button>
+                <button
+                  onClick={() => setShowPhoneModal(true)}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                >
+                  <Phone size={18} />
+                  <span>Invite by Phone</span>
+                </button>
+              </div>
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Share this link with members to join the call
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone Invitation Modal */}
+      {showPhoneModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Invite by Phone</h3>
+              <button
+                onClick={() => setShowPhoneModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Add Phone Number
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  />
+                  <button
+                    onClick={addPhoneNumber}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {phoneNumbers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Phone Numbers ({phoneNumbers.length})
+                  </label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {phoneNumbers.map((number, index) => (
+                      <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        <span className="text-gray-900 dark:text-white">{number}</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => inviteByPhone(number)}
+                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors"
+                          >
+                            Invite
+                          </button>
+                          <button
+                            onClick={() => removePhoneNumber(number)}
+                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Add phone numbers to send meeting invitations via SMS
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Group Call Setup Modal */}
       {showGroupCallModal && (
