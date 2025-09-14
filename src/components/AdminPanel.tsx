@@ -123,24 +123,24 @@ export const AdminPanel: React.FC = () => {
 
   const addAllMembers = async () => {
     const membersToAdd = [
-      { phone: '1234567801', full_name: 'Adedeji, Azeez Oyebade', birth_month: 7, birth_day: 30, is_admin: false, is_active: true },
-      { phone: '1234567802', full_name: 'Adebowale, Kolade', birth_month: 6, birth_day: 11, is_admin: false, is_active: true },
-      { phone: '1234567803', full_name: 'Akra, Victor', birth_month: 3, birth_day: 30, is_admin: false, is_active: true },
-      { phone: '1234567804', full_name: 'Anselme, Dah-Touhouenou', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
-      { phone: '1234567805', full_name: 'Bidemi, Kareem', birth_month: 9, birth_day: 21, is_admin: false, is_active: true },
-      { phone: '1234567806', full_name: 'Bmo, Chika', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
-      { phone: '1234567807', full_name: 'Friday, Edia', birth_month: 2, birth_day: 15, is_admin: false, is_active: true },
-      { phone: '1234567808', full_name: 'Kelvin, Oghogh', birth_month: 5, birth_day: 28, is_admin: false, is_active: true },
-      { phone: '1234567809', full_name: 'Monday, Udoh', birth_month: 8, birth_day: 15, is_admin: false, is_active: true },
-      { phone: '1234567810', full_name: 'Nick, Agbo', birth_month: 4, birth_day: 11, is_admin: false, is_active: true },
-      { phone: '1234567811', full_name: 'Philip, Dika', birth_month: 6, birth_day: 9, is_admin: false, is_active: true },
-      { phone: '1234567812', full_name: 'Sola, Soneye', birth_month: 1, birth_day: 8, is_admin: false, is_active: true },
-      { phone: '1234567813', full_name: 'Suo, Adidi', birth_month: 8, birth_day: 7, is_admin: false, is_active: true },
-      { phone: '1234567814', full_name: 'Teddy, Chilaka', birth_month: 4, birth_day: 4, is_admin: false, is_active: true },
-      { phone: '1234567815', full_name: 'Tiwalolu, Adebote', birth_month: 10, birth_day: 30, is_admin: false, is_active: true },
-      { phone: '1234567816', full_name: 'Ubedu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
-      { phone: '1234567817', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
-      { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
+      { phone: '5101234567', full_name: 'Adedeji, Azeez Oyebade', birth_month: 7, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '5102345678', full_name: 'Adebowale, Kolade', birth_month: 6, birth_day: 11, is_admin: false, is_active: true },
+      { phone: '5103456789', full_name: 'Akra, Victor', birth_month: 3, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '5104567890', full_name: 'Anselme, Dah-Touhouenou', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '5105678901', full_name: 'Bidemi, Kareem', birth_month: 9, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '5106789012', full_name: 'Bmo, Chika', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '5107890123', full_name: 'Friday, Edia', birth_month: 2, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '5108901234', full_name: 'Kelvin, Oghogh', birth_month: 5, birth_day: 28, is_admin: false, is_active: true },
+      { phone: '5109012345', full_name: 'Monday, Udoh', birth_month: 8, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '5100123456', full_name: 'Nick, Agbo', birth_month: 4, birth_day: 11, is_admin: false, is_active: true },
+      { phone: '5101234568', full_name: 'Philip, Dika', birth_month: 6, birth_day: 9, is_admin: false, is_active: true },
+      { phone: '5102345679', full_name: 'Sola, Soneye', birth_month: 1, birth_day: 8, is_admin: false, is_active: true },
+      { phone: '5103456780', full_name: 'Suo, Adidi', birth_month: 8, birth_day: 7, is_admin: false, is_active: true },
+      { phone: '5104567891', full_name: 'Teddy, Chilaka', birth_month: 4, birth_day: 4, is_admin: false, is_active: true },
+      { phone: '5105678902', full_name: 'Tiwalolu, Adebote', birth_month: 10, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '5106789013', full_name: 'Ubedu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
+      { phone: '5107890124', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '5108901235', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
     ];
 
     if (!confirm(`Are you sure you want to add all ${membersToAdd.length} members? This will add them to the database.`)) {
