@@ -117,7 +117,11 @@ export const AdminPanel: React.FC = () => {
       alert('Member deleted successfully!');
     } catch (error) {
       console.error('Error deleting member:', error);
-      alert('Error deleting member.');
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        alert('Network error: Unable to connect to the database. Please check your internet connection and Supabase configuration.');
+      } else {
+        alert(`Error deleting member: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      }
     }
   };
 
