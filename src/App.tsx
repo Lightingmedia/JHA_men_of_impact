@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider } from './components/AuthProvider';
+import { ThemeProvider } from './components/ThemeProvider';
 import { useAuth } from './hooks/useAuth';
 import { Login } from './components/Login';
 import { Layout } from './components/Layout';
@@ -54,9 +55,11 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

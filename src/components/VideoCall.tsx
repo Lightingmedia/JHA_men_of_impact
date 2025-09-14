@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase, Member } from '../lib/supabase';
-import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X } from 'lucide-react';
+import { Video, VideoOff, Mic, MicOff, Phone, PhoneOff, Users, X, EyeOff, Eye } from 'lucide-react';
 
 interface CallState {
   isInCall: boolean;
@@ -25,6 +25,7 @@ export const VideoCall: React.FC = () => {
   });
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [cameraHidden, setCameraHidden] = useState(false);
   const [incomingCall, setIncomingCall] = useState<{
     from: Member;
     offer: RTCSessionDescriptionInit;
@@ -349,6 +350,10 @@ export const VideoCall: React.FC = () => {
     }
   };
 
+  const toggleCameraVisibility = () => {
+    setCameraHidden(!cameraHidden);
+  };
+
   // Update remote video when stream changes
   useEffect(() => {
     if (remoteVideoRef.current && callState.remoteStream) {
@@ -370,7 +375,9 @@ export const VideoCall: React.FC = () => {
           />
           
           {/* Local Video (Picture-in-Picture) */}
-          <div className="absolute top-4 right-4 w-48 h-36 bg-gray-900 rounded-lg overflow-hidden border-2 border-white">
+          <div className={`absolute top-4 right-4 w-48 h-36 bg-gray-900 rounded-lg overflow-hidden border-2 border-white transition-opacity ${
+            cameraHidden ? 'opacity-0' : 'opacity-100'
+          }`}>
             <video
               ref={localVideoRef}
               autoPlay
@@ -378,6 +385,11 @@ export const VideoCall: React.FC = () => {
               muted
               className="w-full h-full object-cover"
             />
+            {cameraHidden && (
+              <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+                <EyeOff className="text-white" size={32} />
+              </div>
+            )}
           </div>
 
           {/* Call Info */}
@@ -392,6 +404,18 @@ export const VideoCall: React.FC = () => {
         {/* Controls */}
         <div className="bg-black/80 p-6">
           <div className="flex justify-center space-x-6">
+            <button
+              onClick={toggleCameraVisibility}
+              className={`p-4 rounded-full transition-colors ${
+                cameraHidden 
+                  ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                  : 'bg-gray-600 hover:bg-gray-700 text-white'
+              }`}
+              title={cameraHidden ? 'Show Camera' : 'Hide Camera'}
+            >
+              {cameraHidden ? <Eye size={24} /> : <EyeOff size={24} />}
+            </button>
+
             <button
               onClick={toggleVideo}
               className={`p-4 rounded-full transition-colors ${
