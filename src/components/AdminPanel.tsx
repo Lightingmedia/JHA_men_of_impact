@@ -19,63 +19,6 @@ export const AdminPanel: React.FC = () => {
   }, []);
 
   const fetchAllMembers = async () => {
-    // Handle demo mode with mock data
-    if (user?.id === 'admin-bypass-id') {
-      const mockMembers: Member[] = [
-        {
-          id: 'admin-bypass-id',
-          phone: '9254343862',
-          full_name: 'Administrator',
-          profile_picture_url: undefined,
-          birth_month: undefined,
-          birth_day: undefined,
-          is_admin: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'demo-member-1',
-          phone: '+1 (555) 234-5678',
-          full_name: 'Brother Williams',
-          profile_picture_url: undefined,
-          birth_month: 4,
-          birth_day: 22,
-          is_admin: false,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'demo-member-2',
-          phone: '+1 (555) 345-6789',
-          full_name: 'Brother Davis',
-          profile_picture_url: undefined,
-          birth_month: 5,
-          birth_day: 8,
-          is_admin: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'demo-member-3',
-          phone: '+1 (555) 456-7890',
-          full_name: 'Brother Johnson',
-          profile_picture_url: undefined,
-          birth_month: 3,
-          birth_day: 15,
-          is_admin: false,
-          is_active: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      setMembers(mockMembers);
-      setLoading(false);
-      return;
-    }
-
     try {
       const { data, error } = await supabase
         .from('members')
@@ -95,31 +38,6 @@ export const AdminPanel: React.FC = () => {
     e.preventDefault();
     
     try {
-      // Handle demo mode - simulate adding member
-      if (user?.id === 'admin-bypass-id') {
-        // Create a mock member for demo purposes
-        const mockMember = {
-          id: `demo-member-${Date.now()}`,
-          phone: newMember.phone,
-          full_name: newMember.full_name,
-          profile_picture_url: undefined,
-          birth_month: undefined,
-          birth_day: undefined,
-          is_admin: newMember.is_admin,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        
-        // Add to local state for demo
-        setMembers(prev => [mockMember, ...prev]);
-        setNewMember({ phone: '', full_name: '', is_admin: false });
-        setShowAddForm(false);
-        alert('Member added successfully! (Demo mode - this member is only visible in this session)');
-        return;
-      }
-
-      // Real database operation
       const { error } = await supabase
         .from('members')
         .insert([newMember]);
@@ -132,17 +50,11 @@ export const AdminPanel: React.FC = () => {
       alert('Member added successfully!');
     } catch (error) {
       console.error('Error adding member:', error);
-      alert(`Error adding member: ${error instanceof Error ? error.message : 'Please check your database connection and try again.'}`);
+      alert(`Error adding member: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     }
   };
 
   const toggleMemberStatus = async (memberId: string, currentStatus: boolean) => {
-    // Prevent operations in demo mode
-    if (user?.id === 'admin-bypass-id') {
-      alert('Member status changes are not available in demo mode. Connect to Supabase to enable full functionality.');
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('members')
@@ -159,12 +71,6 @@ export const AdminPanel: React.FC = () => {
   };
 
   const toggleAdminStatus = async (memberId: string, currentStatus: boolean) => {
-    // Prevent operations in demo mode
-    if (user?.id === 'admin-bypass-id') {
-      alert('Admin status changes are not available in demo mode. Connect to Supabase to enable full functionality.');
-      return;
-    }
-
     try {
       const { error } = await supabase
         .from('members')
@@ -252,14 +158,6 @@ export const AdminPanel: React.FC = () => {
       {showAddForm && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Member</h3>
-          
-          {user?.id === 'admin-bypass-id' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-              <p className="text-yellow-800 text-sm">
-                <strong>Demo Mode:</strong> This will simulate adding a member. Connect to Supabase for real functionality.
-              </p>
-            </div>
-          )}
           
           <form onSubmit={handleAddMember} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

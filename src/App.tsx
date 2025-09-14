@@ -8,7 +8,6 @@ import { MemberDirectory } from './components/MemberDirectory';
 import { BirthdayCalendar } from './components/BirthdayCalendar';
 import { ProfilePage } from './components/ProfilePage';
 import { AdminPanel } from './components/AdminPanel';
-import { AdminPreview } from './components/AdminPreview';
 import { VideoCall } from './components/VideoCall';
 
 const AppContent: React.FC = () => {
@@ -35,8 +34,6 @@ const AppContent: React.FC = () => {
         return <BirthdayCalendar />;
       case 'calls':
         return <VideoCall />;
-      case 'preview':
-        return <AdminPreview />;
       case 'profile':
         return <ProfilePage />;
       case 'admin':

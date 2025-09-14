@@ -64,38 +64,6 @@ export const VideoCall: React.FC = () => {
   }, []);
 
   const fetchMembers = async () => {
-    if (user?.id === 'admin-bypass-id') {
-      // Mock members for demo mode
-      const mockMembers: Member[] = [
-        {
-          id: 'member-1',
-          phone: '+1 (555) 234-5678',
-          full_name: 'Brother Williams',
-          profile_picture_url: undefined,
-          birth_month: 4,
-          birth_day: 22,
-          is_admin: false,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: 'member-2',
-          phone: '+1 (555) 345-6789',
-          full_name: 'Brother Davis',
-          profile_picture_url: undefined,
-          birth_month: 5,
-          birth_day: 8,
-          is_admin: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-      setMembers(mockMembers);
-      return;
-    }
-
     try {
       const { data, error } = await supabase
         .from('members')
@@ -111,11 +79,6 @@ export const VideoCall: React.FC = () => {
   };
 
   const setupSignaling = () => {
-    if (user?.id === 'admin-bypass-id') {
-      // Skip real-time signaling in demo mode
-      return;
-    }
-
     // Set up Supabase real-time for signaling
     const channel = supabase
       .channel('video-calls')
@@ -167,7 +130,6 @@ export const VideoCall: React.FC = () => {
       const answer = await participant.peerConnection.createAnswer();
       await participant.peerConnection.setLocalDescription(answer);
 
-      if (user?.id !== 'admin-bypass-id') {
         supabase.channel('video-calls').send({
           type: 'broadcast',
           event: 'call-answer',
@@ -178,7 +140,6 @@ export const VideoCall: React.FC = () => {
             answer,
           },
         });
-      }
     }
   };
 
@@ -246,7 +207,7 @@ export const VideoCall: React.FC = () => {
 
         // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
-          if (event.candidate && user?.id !== 'admin-bypass-id') {
+          if (event.candidate) {
             supabase.channel('video-calls').send({
               type: 'broadcast',
               event: 'ice-candidate',
@@ -277,7 +238,7 @@ export const VideoCall: React.FC = () => {
 
       // Send invitations to all participants
       for (const member of targetMembers) {
-        if (user?.id !== 'admin-bypass-id') {
+        {
           supabase.channel('video-calls').send({
             type: 'broadcast',
             event: 'call-invite',
@@ -296,7 +257,7 @@ export const VideoCall: React.FC = () => {
         const offer = await participant.peerConnection.createOffer();
         await participant.peerConnection.setLocalDescription(offer);
 
-        if (user?.id !== 'admin-bypass-id') {
+        {
           supabase.channel('video-calls').send({
             type: 'broadcast',
             event: 'call-offer',
@@ -382,7 +343,7 @@ export const VideoCall: React.FC = () => {
 
     // Handle ICE candidates
     peerConnection.onicecandidate = (event) => {
-      if (event.candidate && user?.id !== 'admin-bypass-id') {
+      if (event.candidate) {
         supabase.channel('video-calls').send({
           type: 'broadcast',
           event: 'ice-candidate',
@@ -412,7 +373,7 @@ export const VideoCall: React.FC = () => {
     });
 
     // Send invitation
-    if (user?.id !== 'admin-bypass-id') {
+    {
       supabase.channel('video-calls').send({
         type: 'broadcast',
         event: 'call-invite',
@@ -438,7 +399,6 @@ export const VideoCall: React.FC = () => {
           offer,
         },
       });
-    }
   };
 
   const copyCallId = () => {
@@ -513,7 +473,7 @@ export const VideoCall: React.FC = () => {
 
   const endCall = () => {
     // Send end call signal
-    if (callState.callId && user?.id !== 'admin-bypass-id') {
+    if (callState.callId) {
       supabase.channel('video-calls').send({
         type: 'broadcast',
         event: 'call-end',
@@ -532,7 +492,6 @@ export const VideoCall: React.FC = () => {
           participantId: user?.id,
         },
       });
-    }
 
     cleanup();
   };
@@ -568,7 +527,7 @@ export const VideoCall: React.FC = () => {
   };
 
   const removeParticipantFromCall = (participantId: string) => {
-    if (user?.id !== 'admin-bypass-id') {
+    {
       supabase.channel('video-calls').send({
         type: 'broadcast',
         event: 'participant-left',
@@ -577,7 +536,6 @@ export const VideoCall: React.FC = () => {
           participantId,
         },
       });
-    }
 
     removeParticipant(participantId);
   };
@@ -1111,20 +1069,6 @@ export const VideoCall: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Demo Mode Notice */}
-      {user?.id === 'admin-bypass-id' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2">
-            <Video className="text-yellow-600" size={20} />
-            <span className="text-yellow-800 font-medium">Demo Mode - Video Calling</span>
-          </div>
-          <p className="text-yellow-700 text-sm mt-1">
-            Video calling supports both 1-on-1 and group calls. Features include participant management, call IDs, and real-time invitations. 
-            Connect to Supabase and add members to test full functionality.
-          </p>
-        </div>
-      )}
     </div>
   );
 };

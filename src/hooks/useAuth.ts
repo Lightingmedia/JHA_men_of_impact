@@ -25,29 +25,7 @@ export const useAuthProvider = () => {
 
   const signInWithPhone = async (phone: string) => {
     try {
-      // Admin bypass for development/testing
-      if (phone === '9254343862' || phone === '(925) 434-3862' || phone === '+1 (925) 434-3862') {
-        const adminUser: Member = {
-          id: 'admin-bypass-id',
-          phone: phone,
-          full_name: 'Administrator',
-          profile_picture_url: undefined,
-          birth_month: undefined,
-          birth_day: undefined,
-          is_admin: true,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        localStorage.setItem('jha_member_id', adminUser.id);
-        localStorage.setItem('jha_admin_user', JSON.stringify(adminUser));
-        setUser(adminUser);
-        
-        return { success: true };
-      }
-
-      // First check if the phone number is in our approved members list
+      // Check if the phone number is in our approved members list
       const { data: member, error: memberError } = await supabase
         .from('members')
         .select('*')
@@ -62,7 +40,7 @@ export const useAuthProvider = () => {
         };
       }
 
-      // For now, we'll use a simple auth system
+      // Simple auth system - store member ID
       // In production, you'd want to implement proper phone verification
       localStorage.setItem('jha_member_id', member.id);
       setUser(member);
@@ -85,16 +63,6 @@ export const useAuthProvider = () => {
   const refreshUser = async () => {
     const memberId = localStorage.getItem('jha_member_id');
     if (!memberId) {
-      setLoading(false);
-      return;
-    }
-
-    // Check for admin bypass user
-    if (memberId === 'admin-bypass-id') {
-      const adminUser = localStorage.getItem('jha_admin_user');
-      if (adminUser) {
-        setUser(JSON.parse(adminUser));
-      }
       setLoading(false);
       return;
     }
