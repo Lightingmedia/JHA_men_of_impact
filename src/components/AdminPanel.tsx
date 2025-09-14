@@ -54,6 +54,42 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const addAllMembers = async () => {
+    const membersToAdd = [
+      { phone: '1234567801', full_name: 'Adedeji, Azeez Oyebade', birth_month: 7, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567802', full_name: 'Adebowale, Kolade', birth_month: 6, birth_day: 11, is_admin: false, is_active: true },
+      { phone: '1234567803', full_name: 'Akra, Victor', birth_month: 3, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567804', full_name: 'Anselme, Dah-Touhouenou', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '1234567805', full_name: 'Bidemi, Kareem', birth_month: 9, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '1234567806', full_name: 'Bmo, Chika', birth_month: 4, birth_day: 21, is_admin: false, is_active: true },
+      { phone: '1234567807', full_name: 'Friday, Edia', birth_month: 2, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '1234567808', full_name: 'Kelvin, Oghogh', birth_month: 5, birth_day: 28, is_admin: false, is_active: true },
+      { phone: '1234567809', full_name: 'Monday, Udoh', birth_month: 8, birth_day: 15, is_admin: false, is_active: true },
+      { phone: '1234567810', full_name: 'Nick, Agbo', birth_month: 4, birth_day: 11, is_admin: false, is_active: true },
+      { phone: '1234567811', full_name: 'Philip, Dika', birth_month: 6, birth_day: 9, is_admin: false, is_active: true },
+      { phone: '1234567812', full_name: 'Sola, Soneye', birth_month: 1, birth_day: 8, is_admin: false, is_active: true },
+      { phone: '1234567813', full_name: 'Suo, Adidi', birth_month: 8, birth_day: 7, is_admin: false, is_active: true },
+      { phone: '1234567814', full_name: 'Teddy, Chilaka', birth_month: 4, birth_day: 4, is_admin: false, is_active: true },
+      { phone: '1234567815', full_name: 'Tiwalolu, Adebote', birth_month: 10, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567816', full_name: 'Ubendu, Joseph', birth_month: 8, birth_day: 2, is_admin: false, is_active: true },
+      { phone: '1234567817', full_name: 'Yves, Eteti', birth_month: 6, birth_day: 30, is_admin: false, is_active: true },
+      { phone: '1234567818', full_name: 'Ball, Ude', birth_month: 6, birth_day: 16, is_admin: false, is_active: true }
+    ];
+
+    try {
+      const { error } = await supabase
+        .from('members')
+        .insert(membersToAdd);
+
+      if (error) throw error;
+
+      fetchAllMembers();
+      alert(`Successfully added ${membersToAdd.length} members!`);
+    } catch (error) {
+      console.error('Error adding members:', error);
+      alert(`Error adding members: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+    }
+  };
   const toggleMemberStatus = async (memberId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
@@ -112,6 +148,14 @@ export const AdminPanel: React.FC = () => {
         >
           <Plus size={20} />
           <span>Add Member</span>
+        </button>
+        
+        <button
+          onClick={addAllMembers}
+          className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <Users size={20} />
+          <span>Add All Members</span>
         </button>
       </div>
 
