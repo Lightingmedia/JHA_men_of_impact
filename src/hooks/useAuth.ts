@@ -25,8 +25,11 @@ export const useAuthProvider = () => {
 
   const signInWithPhone = async (phone: string) => {
     try {
-      // For initial setup, allow admin bypass with your specific number
-      if (phone === 'admin' || phone === '+1234567890' || phone === '9254343862') {
+      // Clean the phone number input
+      const cleanPhone = phone.replace(/\D/g, ''); // Remove all non-digits
+      
+      // Check if this is the super admin number
+      if (phone === '9254343862') {
         // Create or get admin user
         const { data: existingAdmin, error: checkError } = await supabase
           .from('members')
@@ -50,7 +53,7 @@ export const useAuthProvider = () => {
             .from('members')
             .insert([{
               phone: '9254343862',
-              full_name: 'System Administrator',
+              full_name: 'JHA Admin',
               is_admin: true,
               is_active: true
             }])
