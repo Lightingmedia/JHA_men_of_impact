@@ -91,6 +91,7 @@ export const Login: React.FC = () => {
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Enter phone number (try: 9254343862)"
+                    placeholder="Enter any phone number"
                     required
                   />
                 </div>
@@ -119,8 +120,8 @@ export const Login: React.FC = () => {
             </form>
 
             <div className="mt-6 text-center text-sm text-gray-600">
-              <p><strong>Demo Access:</strong> Use phone number <code className="bg-gray-100 px-2 py-1 rounded">9254343862</code> for admin login</p>
-              <p className="mt-2">Or contact your group administrator for member access.</p>
+              <p><strong>Open Access:</strong> Enter any phone number to login</p>
+              <p className="mt-2">Use <code className="bg-gray-100 px-2 py-1 rounded">9254343862</code> for admin privileges</p>
             </div>
           </div>
         </div>
