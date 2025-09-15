@@ -31,6 +31,9 @@ body {
     font-size: 16px !important;
     -webkit-appearance: none;
     appearance: none;
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: none;
   }
   
   /* Improve touch targets */
@@ -39,22 +42,46 @@ body {
   select,
   textarea {
     min-height: 44px;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
   }
   
   /* Better mobile form styling */
   .touch-manipulation {
     touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
   }
   
   /* Prevent horizontal scroll on mobile */
   body {
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
   }
   
   /* Better mobile spacing */
   .container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* Fix mobile viewport issues */
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  /* Improve mobile button interactions */
+  button:active {
+    transform: scale(0.98);
+  }
+  
+  /* Fix mobile input focus */
+  input:focus {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   }
 }
 
@@ -63,16 +90,20 @@ input {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 0;
+  -webkit-border-radius: 0.5rem;
+  border-radius: 0.5rem;
 }
 
 input:focus {
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Prevent horizontal scroll */
 html, body {
   overflow-x: hidden;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Smooth transitions */
@@ -89,6 +120,20 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* Mobile-specific button styles */
+@media (max-width: 768px) {
+  button {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
 }
 
 /* Loading animation */

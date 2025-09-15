@@ -24,9 +24,27 @@ export const useAuthProvider = () => {
   const [loading, setLoading] = useState(true);
 
   const signInWithPhone = async (phone: string) => {
-    console.log('Starting sign in process for phone:', phone);
+    console.log('🔐 Starting sign in process for phone:', phone);
+    
+    // Mobile-specific checks
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const startTime = Date.now();
     
     try {
+      // Enhanced mobile error handling
+      if (isMobile) {
+        console.log('📱 Mobile device detected, applying mobile-specific fixes');
+        
+        // Check for common mobile issues
+        if (!window.localStorage) {
+          throw new Error('Local storage not available. Please enable cookies in your browser settings.');
+        }
+        
+        if (!navigator.onLine) {
+          throw new Error('No internet connection. Please check your network and try again.');
+        }
+      }
+
       // First try to find existing member
       const { data: existingMember, error: memberError } = await supabase
         .from('members')
@@ -35,17 +53,17 @@ export const useAuthProvider = () => {
         .maybeSingle();
 
       if (memberError) {
-        console.error('Database error:', memberError);
+        console.error('⚠️ Database error (continuing anyway):', memberError);
         // Continue anyway - create new user
       }
 
       let user = existingMember;
-      console.log('Existing member found:', !!user);
+      console.log('👤 Existing member found:', !!user);
 
       // If user doesn't exist, create them
       if (!user) {
         const isAdmin = phone === '9254343862';
-        console.log('Creating new user, isAdmin:', isAdmin);
+        console.log('➕ Creating new user, isAdmin:', isAdmin);
         
         const { data: newUser, error: createError } = await supabase
           .from('members')
@@ -59,7 +77,7 @@ export const useAuthProvider = () => {
           .single();
 
         if (createError) {
-          console.error('Error creating user:', createError);
+          console.error('⚠️ Error creating user (using fallback):', createError);
           // Even if database fails, create a temporary user for demo
           user = {
             id: `temp-${Date.now()}`,
@@ -73,16 +91,16 @@ export const useAuthProvider = () => {
             birth_month: null,
             birth_day: null
           };
-          console.log('Created temporary user due to database error');
+          console.log('🔄 Created temporary user due to database error');
         } else {
           user = newUser;
-          console.log('Successfully created new user in database');
+          console.log('✅ Successfully created new user in database');
         }
       }
 
       // Make sure user is active
       if (!user.is_active) {
-        console.log('Activating inactive user');
+        console.log('🔄 Activating inactive user');
         await supabase
           .from('members')
           .update({ is_active: true })
@@ -90,14 +108,56 @@ export const useAuthProvider = () => {
         user.is_active = true;
       }
 
-      console.log('Setting user in localStorage and state');
+      console.log('💾 Setting user in localStorage and state');
       localStorage.setItem('jha_member_id', user.id);
+      
+      // Mobile-specific: Add extra verification
+      if (isMobile) {
+        const stored = localStorage.getItem('jha_member_id');
+        if (stored !== user.id) {
+          console.error('❌ Mobile localStorage verification failed');
+          throw new Error('Storage verification failed. Please try again or clear your browser cache.');
+        }
+        console.log('✅ Mobile localStorage verification passed');
+      }
+      
       setUser(user);
       
-      console.log('Sign in successful');
+      const duration = Date.now() - startTime;
+      console.log(`✅ Sign in successful in ${duration}ms`);
+      
+      // Track successful mobile logins
+      if (isMobile) {
+        localStorage.setItem('mobile_login_success', Date.now().toString());
+      }
+      
       return { success: true };
     } catch (error) {
-      console.error('Sign in error:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ Sign in error after ${duration}ms:`, error);
+      
+      // Enhanced mobile error handling
+      if (isMobile) {
+        console.log('📱 Applying mobile fallback strategy');
+        
+        // Track mobile failures for analytics
+        const failures = parseInt(localStorage.getItem('mobile_login_failures') || '0') + 1;
+        localStorage.setItem('mobile_login_failures', failures.toString());
+        
+        // Return specific mobile error messages
+        if (error instanceof Error) {
+          if (error.message.includes('storage') || error.message.includes('localStorage')) {
+            return { success: false, error: 'Browser storage issue. Please enable cookies and local storage, then try again.' };
+          }
+          if (error.message.includes('network') || error.message.includes('fetch')) {
+            return { success: false, error: 'Network connection issue. Please check your internet connection and try again.' };
+          }
+          if (error.message.includes('timeout')) {
+            return { success: false, error: 'Request timed out. Please try again with a stable internet connection.' };
+          }
+        }
+      }
+      
       // Even if everything fails, create a temporary session
       const tempUser = {
         id: `temp-${Date.now()}`,
@@ -112,7 +172,7 @@ export const useAuthProvider = () => {
         birth_day: null
       };
       
-      console.log('Creating emergency temporary user');
+      console.log('🆘 Creating emergency temporary user');
       localStorage.setItem('jha_member_id', tempUser.id);
       setUser(tempUser);
       return { success: true };
@@ -127,9 +187,12 @@ export const useAuthProvider = () => {
   const refreshUser = async () => {
     const memberId = localStorage.getItem('jha_member_id');
     if (!memberId) {
+      console.log('🔍 No stored member ID found');
       setLoading(false);
       return;
     }
+
+    console.log('🔄 Refreshing user data for ID:', memberId);
 
     try {
       const { data: member } = await supabase
@@ -140,12 +203,14 @@ export const useAuthProvider = () => {
         .maybeSingle();
 
       if (member) {
+        console.log('✅ User data refreshed successfully');
         setUser(member);
       } else {
+        console.log('⚠️ User not found or inactive, clearing session');
         localStorage.removeItem('jha_member_id');
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
+      console.error('❌ Error refreshing user:', error);
       localStorage.removeItem('jha_member_id');
     } finally {
       setLoading(false);
