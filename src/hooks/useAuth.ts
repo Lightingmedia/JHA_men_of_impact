@@ -24,6 +24,8 @@ export const useAuthProvider = () => {
   const [loading, setLoading] = useState(true);
 
   const signInWithPhone = async (phone: string) => {
+    console.log('Starting sign in process for phone:', phone);
+    
     try {
       // First try to find existing member
       const { data: existingMember, error: memberError } = await supabase
@@ -38,10 +40,13 @@ export const useAuthProvider = () => {
       }
 
       let user = existingMember;
+      console.log('Existing member found:', !!user);
 
       // If user doesn't exist, create them
       if (!user) {
         const isAdmin = phone === '9254343862';
+        console.log('Creating new user, isAdmin:', isAdmin);
+        
         const { data: newUser, error: createError } = await supabase
           .from('members')
           .insert([{
@@ -68,13 +73,16 @@ export const useAuthProvider = () => {
             birth_month: null,
             birth_day: null
           };
+          console.log('Created temporary user due to database error');
         } else {
           user = newUser;
+          console.log('Successfully created new user in database');
         }
       }
 
       // Make sure user is active
       if (!user.is_active) {
+        console.log('Activating inactive user');
         await supabase
           .from('members')
           .update({ is_active: true })
@@ -82,9 +90,11 @@ export const useAuthProvider = () => {
         user.is_active = true;
       }
 
+      console.log('Setting user in localStorage and state');
       localStorage.setItem('jha_member_id', user.id);
       setUser(user);
       
+      console.log('Sign in successful');
       return { success: true };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -102,6 +112,7 @@ export const useAuthProvider = () => {
         birth_day: null
       };
       
+      console.log('Creating emergency temporary user');
       localStorage.setItem('jha_member_id', tempUser.id);
       setUser(tempUser);
       return { success: true };

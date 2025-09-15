@@ -10,13 +10,25 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setLoading(true);
     setError('');
+    
+    console.log('Form submitted with phone:', phone);
+    
+    // Add small delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const result = await signInWithPhone(phone);
     
     if (!result.success) {
       setError(result.error || 'Sign in failed');
+      console.error('Login failed:', result.error);
+    } else {
+      console.log('Login successful');
     }
     
     setLoading(false);
@@ -89,9 +101,10 @@ export const Login: React.FC = () => {
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    placeholder="Enter phone number (try: 9254343862)"
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                     placeholder="Enter any phone number"
+                    autoComplete="tel"
+                    inputMode="tel"
                     required
                   />
                 </div>
@@ -106,7 +119,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation"
               >
                 {loading ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
@@ -122,6 +135,7 @@ export const Login: React.FC = () => {
             <div className="mt-6 text-center text-sm text-gray-600">
               <p><strong>Open Access:</strong> Enter any phone number to login</p>
               <p className="mt-2">Use <code className="bg-gray-100 px-2 py-1 rounded">9254343862</code> for admin privileges</p>
+              <p className="mt-2 text-xs text-blue-600">Having trouble? Try refreshing the page or clearing your browser cache</p>
             </div>
           </div>
         </div>
