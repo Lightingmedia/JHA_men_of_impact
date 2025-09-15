@@ -84,7 +84,7 @@ export const VideoCall: React.FC = () => {
     return () => {
       cleanup();
     };
-  }, [user]);
+  }, [user?.id]);
 
   const fetchMembers = async () => {
     try {
@@ -441,7 +441,7 @@ export const VideoCall: React.FC = () => {
 
       console.log('✅ Meeting room created successfully:', data);
       
-      const baseUrl = window.location.origin + window.location.pathname;
+      const baseUrl = window.location.origin;
       const link = `${baseUrl}?meeting=${meetingId}`;
       
       console.log('✅ Meeting link created:', link);
