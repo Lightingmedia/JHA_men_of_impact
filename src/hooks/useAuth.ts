@@ -26,25 +26,7 @@ export const useAuthProvider = () => {
   const signInWithPhone = async (phone: string) => {
     console.log('🔐 Starting sign in process for phone:', phone);
     
-    // Mobile-specific checks
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const startTime = Date.now();
-    
     try {
-      // Enhanced mobile error handling
-      if (isMobile) {
-        console.log('📱 Mobile device detected, applying mobile-specific fixes');
-        
-        // Check for common mobile issues
-        if (!window.localStorage) {
-          throw new Error('Local storage not available. Please enable cookies in your browser settings.');
-        }
-        
-        if (!navigator.onLine) {
-          throw new Error('No internet connection. Please check your network and try again.');
-        }
-      }
-
       // First try to find existing member
       const { data: existingMember, error: memberError } = await supabase
         .from('members')
@@ -53,129 +35,35 @@ export const useAuthProvider = () => {
         .maybeSingle();
 
       if (memberError) {
-        console.error('⚠️ Database error (continuing anyway):', memberError);
-        // Continue anyway - create new user
+        console.error('⚠️ Database error:', memberError);
+        throw new Error('Database connection error. Please try again.');
       }
 
-      let user = existingMember;
-      console.log('👤 Existing member found:', !!user);
-
-      // If user doesn't exist, create them
-      if (!user) {
-        const isAdmin = phone === '9254343862';
-        console.log('➕ Creating new user, isAdmin:', isAdmin);
-        
-        const { data: newUser, error: createError } = await supabase
-          .from('members')
-          .insert([{
-            phone: phone,
-            full_name: isAdmin ? 'JHA Admin' : `User ${phone}`,
-            is_admin: isAdmin,
-            is_active: true
-          }])
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('⚠️ Error creating user (using fallback):', createError);
-          // Even if database fails, create a temporary user for demo
-          user = {
-            id: `temp-${Date.now()}`,
-            phone: phone,
-            full_name: phone === '9254343862' ? 'JHA Admin' : `User ${phone}`,
-            is_admin: phone === '9254343862',
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            profile_picture_url: null,
-            birth_month: null,
-            birth_day: null
-          };
-          console.log('🔄 Created temporary user due to database error');
-        } else {
-          user = newUser;
-          console.log('✅ Successfully created new user in database');
-        }
+      if (!existingMember) {
+        throw new Error('User not found. Please complete registration first.');
       }
+
+      const user = existingMember;
+      console.log('👤 Existing member found:', user.full_name);
 
       // Make sure user is active
       if (!user.is_active) {
-        console.log('🔄 Activating inactive user');
-        await supabase
-          .from('members')
-          .update({ is_active: true })
-          .eq('id', user.id);
-        user.is_active = true;
+        throw new Error('Account is inactive. Please contact an administrator.');
       }
 
       console.log('💾 Setting user in localStorage and state');
       localStorage.setItem('jha_member_id', user.id);
-      
-      // Mobile-specific: Add extra verification
-      if (isMobile) {
-        const stored = localStorage.getItem('jha_member_id');
-        if (stored !== user.id) {
-          console.error('❌ Mobile localStorage verification failed');
-          throw new Error('Storage verification failed. Please try again or clear your browser cache.');
-        }
-        console.log('✅ Mobile localStorage verification passed');
-      }
-      
       setUser(user);
       
-      const duration = Date.now() - startTime;
-      console.log(`✅ Sign in successful in ${duration}ms`);
-      
-      // Track successful mobile logins
-      if (isMobile) {
-        localStorage.setItem('mobile_login_success', Date.now().toString());
-      }
+      console.log('✅ Sign in successful');
       
       return { success: true };
     } catch (error) {
-      const duration = Date.now() - startTime;
-      console.error(`❌ Sign in error after ${duration}ms:`, error);
-      
-      // Enhanced mobile error handling
-      if (isMobile) {
-        console.log('📱 Applying mobile fallback strategy');
-        
-        // Track mobile failures for analytics
-        const failures = parseInt(localStorage.getItem('mobile_login_failures') || '0') + 1;
-        localStorage.setItem('mobile_login_failures', failures.toString());
-        
-        // Return specific mobile error messages
-        if (error instanceof Error) {
-          if (error.message.includes('storage') || error.message.includes('localStorage')) {
-            return { success: false, error: 'Browser storage issue. Please enable cookies and local storage, then try again.' };
-          }
-          if (error.message.includes('network') || error.message.includes('fetch')) {
-            return { success: false, error: 'Network connection issue. Please check your internet connection and try again.' };
-          }
-          if (error.message.includes('timeout')) {
-            return { success: false, error: 'Request timed out. Please try again with a stable internet connection.' };
-          }
-        }
-      }
-      
-      // Even if everything fails, create a temporary session
-      const tempUser = {
-        id: `temp-${Date.now()}`,
-        phone: phone,
-        full_name: phone === '9254343862' ? 'JHA Admin' : `User ${phone}`,
-        is_admin: phone === '9254343862',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        profile_picture_url: null,
-        birth_month: null,
-        birth_day: null
+      console.error('❌ Sign in error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed. Please try again.' 
       };
-      
-      console.log('🆘 Creating emergency temporary user');
-      localStorage.setItem('jha_member_id', tempUser.id);
-      setUser(tempUser);
-      return { success: true };
     }
   };
 
