@@ -61,57 +61,30 @@ export const ProfilePage: React.FC = () => {
 
     setUploading(true);
     try {
-      console.log('📸 Starting profile picture upload...', {
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: file.type,
-        userId: user.id
-      });
-
-      const fileExt = file.name.split('.').pop();
-      const timestamp = Date.now();
-      const fileName = `${user.id}/profile-${timestamp}.${fileExt}`;
-
-      console.log('📁 Upload path:', fileName);
-
-      // First, try to create the bucket if it doesn't exist
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const profileBucketExists = buckets?.some(bucket => bucket.name === 'profile-pictures');
+      console.log('📸 Converting image to base64...');
       
-      if (!profileBucketExists) {
-        console.log('🪣 Creating profile-pictures bucket...');
-        const { error: bucketError } = await supabase.storage.createBucket('profile-pictures', {
-          public: true,
-          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
-          fileSizeLimit: 5242880 // 5MB
-        });
-        
-        if (bucketError) {
-          console.error('❌ Error creating bucket:', bucketError);
-          // Continue anyway, bucket might already exist
-        }
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from('profile-pictures')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) {
-        console.error('❌ Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('✅ File uploaded successfully');
-
-      const { data } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(fileName);
-
-      console.log('🔗 Public URL:', data.publicUrl);
-
+      // Convert image to base64 data URL
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert image to base64'));
+          }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+      });
+      
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+      
+      console.log('✅ Image converted to base64');
+      
+      // Update database with base64 data URL
       const { error: updateError } = await supabase
         .from('members')
-        .update({ profile_picture_url: data.publicUrl })
+        .update({ profile_picture_url: base64Data })
         .eq('id', user.id);
 
       if (updateError) {
@@ -126,20 +99,18 @@ export const ProfilePage: React.FC = () => {
     } catch (error) {
       console.error('Error uploading file:', error);
       
-      let errorMessage = 'Error uploading profile picture. ';
+      let errorMessage = 'Failed to upload profile picture. ';
       
       if (error instanceof Error) {
-        if (error.message.includes('storage')) {
-          errorMessage += 'Storage service unavailable. Please try again later.';
-        } else if (error.message.includes('permission')) {
-          errorMessage += 'Permission denied. Please check your account settings.';
-        } else if (error.message.includes('network')) {
-          errorMessage += 'Network error. Please check your connection.';
+        if (error.message.includes('base64')) {
+          errorMessage += 'Could not process the image file.';
+        } else if (error.message.includes('database')) {
+          errorMessage += 'Database error. Please try again.';
         } else {
           errorMessage += error.message;
         }
       } else {
-        errorMessage += 'Please try again.';
+        errorMessage += 'Unknown error occurred.';
       }
       
       alert(errorMessage);
