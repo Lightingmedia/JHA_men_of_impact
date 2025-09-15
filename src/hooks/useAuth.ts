@@ -25,9 +25,6 @@ export const useAuthProvider = () => {
 
   const signInWithPhone = async (phone: string) => {
     try {
-      // Clean the phone number input
-      const cleanPhone = phone.replace(/\D/g, ''); // Remove all non-digits
-      
       // Check if this is the super admin number
       if (phone === '9254343862') {
         // Create or get admin user
@@ -88,14 +85,14 @@ export const useAuthProvider = () => {
         console.error('Database error:', memberError);
         return {
           success: false,
-          error: 'Database connection error. Please check your Supabase configuration.'
+          error: 'Database connection error. Please try again.'
         };
       }
 
       if (!member) {
         return {
           success: false,
-          error: 'Phone number not found in approved members list. Please contact an administrator.'
+          error: 'Phone number not found. Please contact an administrator or try: 9254343862 for admin access.'
         };
       }
 
@@ -107,7 +104,7 @@ export const useAuthProvider = () => {
       console.error('Sign in error:', error);
       return {
         success: false,
-        error: `Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Error: ${error instanceof Error ? error.message : 'Please try again'}`
       };
     }
   };
