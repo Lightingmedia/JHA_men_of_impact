@@ -405,25 +405,42 @@ export const VideoCall: React.FC = () => {
 
   const generateMeetingLink = async () => {
     try {
+      console.log('🔗 Starting meeting creation...');
+      
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      
       const meetingId = `meeting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('🔗 Creating meeting room:', meetingId);
+      console.log('👤 User ID:', user.id);
       
       // Create meeting room in database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('meeting_rooms')
         .insert([{
           id: meetingId,
           created_by: user?.id,
           is_active: true,
           participants: []
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) {
-        console.error('❌ Error creating meeting room:', error);
+        console.error('❌ Database error creating meeting room:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         throw error;
       }
 
+      console.log('✅ Meeting room created successfully:', data);
+      
       const baseUrl = window.location.origin + window.location.pathname;
       const link = `${baseUrl}?meeting=${meetingId}`;
       
@@ -434,7 +451,24 @@ export const VideoCall: React.FC = () => {
       setShowMeetingModal(true);
     } catch (error) {
       console.error('❌ Error creating meeting:', error);
-      alert('Failed to create meeting. Please try again.');
+      
+      let errorMessage = 'Failed to create meeting. ';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('not authenticated')) {
+          errorMessage += 'Please make sure you are logged in.';
+        } else if (error.message.includes('permission')) {
+          errorMessage += 'Permission denied. Please check your account status.';
+        } else if (error.message.includes('network')) {
+          errorMessage += 'Network error. Please check your connection.';
+        } else {
+          errorMessage += `Error: ${error.message}`;
+        }
+      } else {
+        errorMessage += 'Unknown error occurred.';
+      }
+      
+      alert(errorMessage);
     }
   };
 
