@@ -47,35 +47,106 @@ export const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file type and size
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('File size must be less than 5MB');
+      return;
+    }
+
     setUploading(true);
     try {
+      console.log('📸 Starting profile picture upload...', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        userId: user.id
+      });
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/profile.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${user.id}/profile-${timestamp}.${fileExt}`;
+
+      console.log('📁 Upload path:', fileName);
+
+      // First, try to create the bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const profileBucketExists = buckets?.some(bucket => bucket.name === 'profile-pictures');
+      
+      if (!profileBucketExists) {
+        console.log('🪣 Creating profile-pictures bucket...');
+        const { error: bucketError } = await supabase.storage.createBucket('profile-pictures', {
+          public: true,
+          allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+        
+        if (bucketError) {
+          console.error('❌ Error creating bucket:', bucketError);
+          // Continue anyway, bucket might already exist
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('profile-pictures')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('✅ File uploaded successfully');
 
       const { data } = supabase.storage
         .from('profile-pictures')
         .getPublicUrl(fileName);
+
+      console.log('🔗 Public URL:', data.publicUrl);
 
       const { error: updateError } = await supabase
         .from('members')
         .update({ profile_picture_url: data.publicUrl })
         .eq('id', user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('❌ Database update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('✅ Profile picture updated in database');
 
       await refreshUser();
       alert('Profile picture updated successfully!');
     } catch (error) {
       console.error('Error uploading file:', error);
-      alert('Error uploading profile picture. Please try again.');
+      
+      let errorMessage = 'Error uploading profile picture. ';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('storage')) {
+          errorMessage += 'Storage service unavailable. Please try again later.';
+        } else if (error.message.includes('permission')) {
+          errorMessage += 'Permission denied. Please check your account settings.';
+        } else if (error.message.includes('network')) {
+          errorMessage += 'Network error. Please check your connection.';
+        } else {
+          errorMessage += error.message;
+        }
+      } else {
+        errorMessage += 'Please try again.';
+      }
+      
+      alert(errorMessage);
     } finally {
       setUploading(false);
+      // Clear the file input
+      e.target.value = '';
     }
   };
 

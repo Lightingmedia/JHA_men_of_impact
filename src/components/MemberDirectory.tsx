@@ -88,9 +88,19 @@ export const MemberDirectory: React.FC = () => {
                     src={member.profile_picture_url}
                     alt={member.full_name}
                     className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-4 ring-blue-100"
+                    onError={(e) => {
+                      console.log('❌ Image failed to load:', member.profile_picture_url);
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
                 ) : (
                   <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
+                    <User className="text-blue-600" size={24} />
+                  </div>
+                )}
+                {member.profile_picture_url && (
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200 hidden">
                     <User className="text-blue-600" size={24} />
                   </div>
                 )}
