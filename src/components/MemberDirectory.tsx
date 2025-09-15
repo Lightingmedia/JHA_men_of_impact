@@ -54,48 +54,48 @@ export const MemberDirectory: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Member Directory</h2>
           <p className="text-gray-600">{filteredMembers.length} active members</p>
         </div>
 
         {/* Search */}
-        <div className="relative max-w-xs w-full">
+        <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
             placeholder="Search members..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
           />
         </div>
       </div>
 
       {/* Members Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredMembers.map((member) => (
           <div
             key={member.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:scale-105"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200"
           >
             {/* Profile Picture */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4 sm:mb-6">
               <div className="relative">
                 {member.profile_picture_url ? (
                   <img
                     src={member.profile_picture_url}
                     alt={member.full_name}
-                    className="w-20 h-20 rounded-full object-cover ring-4 ring-blue-100"
+                    className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-4 ring-blue-100"
                   />
                 ) : (
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
-                    <User className="text-blue-600" size={32} />
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
+                    <User className="text-blue-600" size={24} />
                   </div>
                 )}
                 {member.is_admin && (
-                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold ring-2 ring-white">
+                  <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold ring-2 ring-white">
                     A
                   </div>
                 )}
@@ -104,12 +104,12 @@ export const MemberDirectory: React.FC = () => {
 
             {/* Member Info */}
             <div className="text-center space-y-4">
-              <h3 className="font-semibold text-gray-900 text-lg">{member.full_name}</h3>
+              <h3 className="font-semibold text-gray-900 text-base sm:text-lg">{member.full_name}</h3>
               
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-center justify-center space-x-2">
                   <Phone size={16} className="text-gray-400" />
-                  <span>{member.phone}</span>
+                  <span className="break-all">{member.phone}</span>
                 </div>
                 
                 <div className="flex items-center justify-center space-x-2">
