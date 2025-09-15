@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
-import { Users, Calendar, Settings, LogOut, User, Video, Sun, Moon } from 'lucide-react';
+import { Users, Calendar, Settings, LogOut, User, Video, Sun, Moon, BarChart3, Bug } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +18,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChang
     { id: 'calendar', label: 'Birthdays', icon: Calendar },
     { id: 'calls', label: 'Video Calls', icon: Video },
     { id: 'profile', label: 'Profile', icon: User },
+    ...(user?.is_admin ? [
+      { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+      { id: 'debugger', label: 'Debugger', icon: Bug }
+    ] : []),
     ...(user?.is_admin ? [{ id: 'admin', label: 'Admin', icon: Settings }] : []),
   ];
 

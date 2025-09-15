@@ -277,10 +277,18 @@ export const VideoCall: React.FC = () => {
 
     } catch (error) {
       console.error('Error starting call:', error);
-      if (error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
-        alert('Camera/microphone access was denied. Please grant permission in your browser settings and try again.');
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          alert('Camera/microphone access was denied. Please grant permission in your browser settings:\n\n1. Click the camera/microphone icon in your browser\'s address bar\n2. Select "Allow" for both camera and microphone\n3. Refresh the page and try again\n\nOn mobile: Go to Settings → Site Settings → Camera/Microphone → Allow');
+        } else if (error.name === 'NotFoundError') {
+          alert('No camera or microphone found. Please ensure your device has these capabilities and they are not being used by another application.');
+        } else if (error.name === 'NotReadableError') {
+          alert('Camera or microphone is already in use by another application. Please close other apps using these devices and try again.');
+        } else {
+          alert(`Media access error: ${error.message}\n\nPlease check your device permissions and try again.`);
+        }
       } else {
-        alert('Error accessing camera/microphone. Please check permissions.');
+        alert(`Error starting call: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check your internet connection and device permissions.`);
       }
     }
   };
@@ -312,10 +320,18 @@ export const VideoCall: React.FC = () => {
 
     } catch (error) {
       console.error('Error answering call:', error);
-      if (error instanceof DOMException && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
-        alert('Camera/microphone access was denied. Please grant permission in your browser settings and try again.');
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          alert('Camera/microphone access was denied. Please grant permission in your browser settings:\n\n1. Click the camera/microphone icon in your browser\'s address bar\n2. Select "Allow" for both camera and microphone\n3. Refresh the page and try again\n\nOn mobile: Go to Settings → Site Settings → Camera/Microphone → Allow');
+        } else if (error.name === 'NotFoundError') {
+          alert('No camera or microphone found. Please ensure your device has these capabilities and they are not being used by another application.');
+        } else if (error.name === 'NotReadableError') {
+          alert('Camera or microphone is already in use by another application. Please close other apps using these devices and try again.');
+        } else {
+          alert(`Media access error: ${error.message}\n\nPlease check your device permissions and try again.`);
+        }
       } else {
-        alert('Error accessing camera/microphone. Please check permissions.');
+        alert(`Error answering call: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease check your internet connection and device permissions.`);
       }
     }
   };
