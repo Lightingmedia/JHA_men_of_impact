@@ -242,29 +242,6 @@ export const Login: React.FC = () => {
                 )}
               </button>
             </form>
-
-            {/* Quick Access */}
-            <div className="mt-6 space-y-3">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-3">Quick Access:</p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => setPhone('9254343862')}
-                    disabled={loading}
-                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white text-sm py-2 px-3 rounded-lg transition-colors touch-manipulation"
-                  >
-                    Admin Demo
-                  </button>
-                  <button
-                    onClick={() => setPhone('123')}
-                    disabled={loading}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white text-sm py-2 px-3 rounded-lg transition-colors touch-manipulation"
-                  >
-                    User Demo
-                  </button>
-                </div>
-              </div>
-            </div>
           </>
         )}
 
@@ -399,20 +376,6 @@ export const Login: React.FC = () => {
             </p>
           </div>
         )}
-
-        {/* Help Text */}
-        <div className="mt-6 text-center">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <p className="text-sm text-blue-800 font-medium mb-2">System Information</p>
-            <p className="text-sm text-blue-700 mb-2">
-              The system will automatically detect if you're a returning member or new user
-            </p>
-            <div className="text-xs text-blue-600 space-y-1">
-              <p>Admin Demo: <code className="bg-blue-100 px-2 py-1 rounded">9254343862</code></p>
-              <p>User Demo: <code className="bg-blue-100 px-2 py-1 rounded">123</code></p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
