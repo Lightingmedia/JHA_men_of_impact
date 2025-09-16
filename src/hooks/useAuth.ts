@@ -83,6 +83,20 @@ export const useAuthProvider = () => {
     console.log('🔄 Refreshing user data for ID:', memberId);
 
     try {
+      // Test database connection
+      console.log('🔍 Testing database connection...');
+      const { error: connectionError } = await supabase
+        .from('members')
+        .select('count')
+        .limit(1);
+      
+      if (connectionError) {
+        console.error('❌ Database connection failed:', connectionError);
+        throw new Error('Database connection failed');
+      }
+      
+      console.log('✅ Database connection successful');
+      
       const { data: member } = await supabase
         .from('members')
         .select('*')

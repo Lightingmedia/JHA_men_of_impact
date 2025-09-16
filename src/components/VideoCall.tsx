@@ -408,20 +408,40 @@ export const VideoCall: React.FC = () => {
       console.log('🔗 Starting meeting creation...');
       
       if (!user?.id) {
-        throw new Error('User not authenticated');
+        console.error('❌ User not authenticated:', user);
+        alert('Please log in to create a meeting room.');
+        return;
       }
+      
+      console.log('👤 User authenticated:', { id: user.id, name: user.full_name });
       
       const meetingId = `meeting-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('🔗 Creating meeting room:', meetingId);
-      console.log('👤 User ID:', user.id);
+      
+      // Test database connection first
+      console.log('🔍 Testing database connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('members')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+      
+      if (testError) {
+        console.error('❌ Database connection test failed:', testError);
+        alert('Database connection error. Please check your internet connection and try again.');
+        return;
+      }
+      
+      console.log('✅ Database connection successful');
       
       // Create meeting room in database
+      console.log('📝 Inserting meeting room into database...');
       const { data, error } = await supabase
         .from('meeting_rooms')
         .insert([{
           id: meetingId,
-          created_by: user?.id,
+          created_by: user.id,
           is_active: true,
           participants: []
         }])
@@ -430,13 +450,33 @@ export const VideoCall: React.FC = () => {
 
       if (error) {
         console.error('❌ Database error creating meeting room:', error);
-        console.error('Error details:', {
+        
+        // Provide specific error messages based on error type
+        let errorMessage = 'Failed to create meeting room. ';
+        
+        if (error.code === '23503') {
+          errorMessage += 'User authentication error. Please log out and log back in.';
+        } else if (error.code === '42P01') {
+          errorMessage += 'Database table not found. Please contact support.';
+        } else if (error.message.includes('permission')) {
+          errorMessage += 'Permission denied. Please check your account status.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage += 'Network error. Please check your internet connection.';
+        } else {
+          errorMessage += `Database error: ${error.message}`;
+        }
+        
+        console.error('📋 Error details:', {
+          code: error.code,
           message: error.message,
           details: error.details,
           hint: error.hint,
-          code: error.code
+          userId: user.id,
+          meetingId: meetingId
         });
-        throw error;
+        
+        alert(errorMessage);
+        return;
       }
 
       console.log('✅ Meeting room created successfully:', data);
@@ -452,21 +492,26 @@ export const VideoCall: React.FC = () => {
     } catch (error) {
       console.error('❌ Error creating meeting:', error);
       
-      let errorMessage = 'Failed to create meeting. ';
+      let errorMessage = 'Unexpected error creating meeting. ';
       
       if (error instanceof Error) {
-        if (error.message.includes('not authenticated')) {
-          errorMessage += 'Please make sure you are logged in.';
-        } else if (error.message.includes('permission')) {
-          errorMessage += 'Permission denied. Please check your account status.';
-        } else if (error.message.includes('network')) {
-          errorMessage += 'Network error. Please check your connection.';
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          errorMessage += 'Network connection failed. Please check your internet connection.';
+        } else if (error.message.includes('JSON')) {
+          errorMessage += 'Data format error. Please try again.';
         } else {
-          errorMessage += `Error: ${error.message}`;
+          errorMessage += `System error: ${error.message}`;
         }
       } else {
-        errorMessage += 'Unknown error occurred.';
+        errorMessage += 'Unknown system error occurred. Please try again.';
       }
+      
+      console.error('📋 Unexpected error details:', {
+        error: error,
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        userId: user?.id,
+        userAuthenticated: !!user
+      });
       
       alert(errorMessage);
     }
