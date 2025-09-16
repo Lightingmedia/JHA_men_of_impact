@@ -1,8 +1,8 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-export const useAuth = () => {
+export const useAuthProvider = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -51,4 +51,3 @@ export const useAuth = () => {
     refreshUser,
     AuthContext
   };
-};
