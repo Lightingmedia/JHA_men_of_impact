@@ -168,7 +168,14 @@ export const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Login Panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-blue-100">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gradient-to-br from-blue-50 to-blue-100 relative">
+        {/* Floating decorative elements */}
+        <div className="absolute top-20 left-20 w-16 h-16 bg-blue-300/30 rounded-full blur-xl"></div>
+        <div className="absolute bottom-32 left-16 w-20 h-20 bg-blue-400/25 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-12 h-12 bg-blue-300/30 rounded-full blur-lg"></div>
+        <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-blue-200/40 rounded-full blur-md"></div>
+        <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-blue-300/35 rounded-full blur-sm"></div>
+
         <div className="w-full max-w-md">
           {/* Translucent Login Card */}
           <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/30 p-8 relative overflow-hidden">
@@ -197,14 +204,13 @@ export const Login: React.FC = () => {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-base bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500"
-                        placeholder="username@gmail.com"
+                        placeholder="Enter your phone number"
                         required
                         autoComplete="tel"
                         inputMode="tel"
                         style={{ fontSize: '16px' }}
                       />
                     </div>
-
 
                     {error && (
                       <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 flex items-start space-x-3">
@@ -348,16 +354,6 @@ export const Login: React.FC = () => {
                 </div>
               )}
 
-              {/* Bottom Text */}
-              <div className="text-center mt-8">
-                <p className="text-sm text-gray-600">
-                  Don't have an account yet?{' '}
-                  <span className="text-blue-600 font-medium cursor-pointer hover:text-blue-700">
-                    Register for free
-                  </span>
-                </p>
-              </div>
-
               {/* Returning User Welcome */}
               {userExists === true && step === 'phone' && (
                 <div className="mt-6 p-4 bg-blue-50/90 backdrop-blur-sm border-2 border-blue-200/60 rounded-xl">
@@ -372,14 +368,19 @@ export const Login: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="absolute bottom-32 left-16 w-20 h-20 bg-blue-400/25 rounded-full blur-xl"></div>
-          <div className="absolute bottom-20 right-20 w-12 h-12 bg-blue-300/30 rounded-full blur-lg"></div>
-          <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-blue-200/40 rounded-full blur-md"></div>
-          <div className="absolute top-1/3 right-1/4 w-6 h-6 bg-blue-300/35 rounded-full blur-sm"></div>
         </div>
+      </div>
+
+      {/* Right Side - Group Photo */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 relative overflow-hidden">
+        {/* Floating decorative elements */}
+        <div className="absolute top-20 left-20 w-16 h-16 bg-blue-300/30 rounded-full blur-xl"></div>
+        <div className="absolute bottom-32 right-16 w-20 h-20 bg-blue-400/25 rounded-full blur-xl"></div>
+        <div className="absolute top-1/3 right-1/4 w-12 h-12 bg-blue-200/40 rounded-full blur-lg"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-8 h-8 bg-blue-300/35 rounded-full blur-md"></div>
 
         {/* Group Photo */}
-        <div className="absolute inset-0 flex items-center justify-center p-12">
+        <div className="flex items-center justify-center p-12 w-full">
           <div className="relative">
             <img
               src="/jha-group-photo.jpg"
