@@ -173,15 +173,15 @@ export const Login: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="bg-blue-100 rounded-full p-3 sm:p-4 w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 flex items-center justify-center">
-            <Users size={deviceInfo?.isMobile ? 28 : 32} className="text-blue-600" />
+          <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-full p-3 sm:p-4 w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 flex items-center justify-center shadow-lg">
+            <Users size={deviceInfo?.isMobile ? 28 : 32} className="text-white" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">JHA Men Of Impact</h1>
-          <p className="text-sm sm:text-base text-gray-600">Welcome to our private community</p>
+          <p className="text-sm sm:text-base text-blue-700 font-medium">Building Brotherhood, Creating Impact</p>
           
           {/* Device Info */}
           {deviceInfo && (
-            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-gray-500">
+            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-blue-500">
               {deviceInfo.isMobile ? <Smartphone size={14} /> : <Monitor size={14} />}
               <span>{deviceInfo.browser} on {deviceInfo.os}</span>
             </div>
@@ -226,7 +226,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !phone.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 sm:py-4 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 touch-manipulation"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 sm:py-4 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 touch-manipulation shadow-lg hover:shadow-xl"
                 style={{ minHeight: '48px' }}
               >
                 {loading ? (
@@ -250,11 +250,11 @@ export const Login: React.FC = () => {
           <>
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
-                <User className="text-blue-600" size={20} />
-                <h3 className="text-blue-800 font-medium">Welcome! You're new here.</h3>
+                <User className="text-blue-700" size={20} />
+                <h3 className="text-blue-900 font-semibold">Welcome to JHA Men Of Impact!</h3>
               </div>
-              <p className="text-blue-700 text-sm">
-                To get you set up in our community, I'll need some basic information.
+              <p className="text-blue-800 text-sm">
+                Join our brotherhood of impactful men. Let's get you set up with some basic information.
               </p>
             </div>
 
@@ -322,7 +322,7 @@ export const Login: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading || !registrationData.full_name.trim() || registrationData.birth_month === 0}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <>
@@ -346,19 +346,19 @@ export const Login: React.FC = () => {
           <div className="text-center space-y-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <div className="flex items-center justify-center space-x-2 mb-4">
-                <CheckCircle className="text-green-600" size={32} />
-                <h3 className="text-green-800 font-bold text-lg">Registration Successful!</h3>
+                <CheckCircle className="text-blue-600" size={32} />
+                <h3 className="text-blue-800 font-bold text-lg">Welcome to the Brotherhood!</h3>
               </div>
-              <p className="text-green-700 text-sm mb-4">
-                Welcome to JHA Men Of Impact, {registrationData.full_name}!
+              <p className="text-blue-700 text-sm mb-4">
+                {registrationData.full_name}, you're now part of JHA Men Of Impact!
               </p>
-              <p className="text-green-600 text-sm">
-                Your account has been created and you're being logged in automatically...
+              <p className="text-blue-600 text-sm">
+                Your brotherhood journey begins now. Logging you in...
               </p>
             </div>
 
-            <div className="flex items-center justify-center space-x-2 text-blue-600">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+            <div className="flex items-center justify-center space-x-2 text-blue-700">
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-700 border-t-transparent"></div>
               <span className="text-sm">Logging you in...</span>
             </div>
           </div>
@@ -368,11 +368,11 @@ export const Login: React.FC = () => {
         {userExists === true && step === 'phone' && (
           <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
-              <CheckCircle className="text-green-600" size={20} />
-              <h3 className="text-green-800 font-medium">Welcome back!</h3>
+              <CheckCircle className="text-blue-600" size={20} />
+              <h3 className="text-blue-800 font-medium">Welcome back, Brother!</h3>
             </div>
-            <p className="text-green-700 text-sm">
-              You're already registered in our system. Logging you in...
+            <p className="text-blue-700 text-sm">
+              Great to see you again. Logging you into the brotherhood...
             </p>
           </div>
         )}

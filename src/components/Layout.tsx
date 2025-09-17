@@ -34,12 +34,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentTab, onTabChang
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-3">
-              <div className="bg-blue-600 dark:bg-blue-500 rounded-lg p-2">
+              <div className="bg-gradient-to-br from-blue-600 to-blue-700 dark:from-blue-500 dark:to-blue-600 rounded-lg p-2 shadow-lg">
                 <Users className="text-white" size={24} />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold text-gray-900 dark:text-white">JHA Men Of Impact</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Private Community</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Brotherhood • Impact • Excellence</p>
               </div>
             </div>
             
