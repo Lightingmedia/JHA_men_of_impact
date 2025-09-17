@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Member } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
-import { Plus, Edit, Trash2, Users, UserCheck, UserX, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, UserCheck, UserX, X, Download, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
 
 export const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -201,6 +203,73 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const exportToExcel = () => {
+    try {
+      // Prepare member data for export
+      const exportData = members.map(member => ({
+        'Full Name': member.full_name,
+        'Phone Number': member.phone,
+        'Birthday': member.birth_month && member.birth_day 
+          ? `${months.find(m => m.value === member.birth_month?.toString())?.label} ${member.birth_day}`
+          : 'Not set',
+        'Status': member.is_active ? 'Active' : 'Inactive',
+        'Role': member.is_admin ? 'Administrator' : 'Member',
+        'Created Date': format(new Date(member.created_at), 'MMM dd, yyyy'),
+        'Last Updated': format(new Date(member.updated_at), 'MMM dd, yyyy'),
+        'Member ID': member.id
+      }));
+
+      // Create workbook with multiple sheets
+      const workbook = XLSX.utils.book_new();
+
+      // Members sheet
+      const membersSheet = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(workbook, membersSheet, 'Members');
+
+      // Summary sheet
+      const summaryData = [
+        { Metric: 'Total Members', Value: members.length },
+        { Metric: 'Active Members', Value: activeMembers.length },
+        { Metric: 'Inactive Members', Value: inactiveMembers.length },
+        { Metric: 'Administrators', Value: members.filter(m => m.is_admin).length },
+        { Metric: 'Members with Birthdays Set', Value: members.filter(m => m.birth_month && m.birth_day).length },
+        { Metric: 'Export Date', Value: format(new Date(), 'MMM dd, yyyy HH:mm') }
+      ];
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+      // Birthday calendar sheet
+      const birthdayData = members
+        .filter(m => m.birth_month && m.birth_day)
+        .map(member => ({
+          'Name': member.full_name,
+          'Month': months.find(m => m.value === member.birth_month?.toString())?.label || '',
+          'Day': member.birth_day,
+          'Phone': member.phone,
+          'Status': member.is_active ? 'Active' : 'Inactive'
+        }))
+        .sort((a, b) => {
+          const monthA = months.findIndex(m => m.label === a.Month);
+          const monthB = months.findIndex(m => m.label === b.Month);
+          if (monthA !== monthB) return monthA - monthB;
+          return (a.Day || 0) - (b.Day || 0);
+        });
+      const birthdaySheet = XLSX.utils.json_to_sheet(birthdayData);
+      XLSX.utils.book_append_sheet(workbook, birthdaySheet, 'Birthday Calendar');
+
+      // Generate filename with timestamp
+      const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+      const filename = `JHA_Members_Export_${timestamp}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(workbook, filename);
+      
+      alert(`Excel file "${filename}" has been downloaded successfully!`);
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Error exporting data to Excel. Please try again.');
+    }
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -248,8 +317,16 @@ export const AdminPanel: React.FC = () => {
         </button>
         
         <button
-          onClick={addAllMembers}
+          onClick={exportToExcel}
           className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <FileSpreadsheet size={20} />
+          <span>Export to Excel</span>
+        </button>
+        
+        <button
+          onClick={addAllMembers}
+          className="inline-flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
         >
           <Users size={20} />
           <span>Add All Members</span>

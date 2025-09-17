@@ -16,13 +16,12 @@ import {
   Filter,
   Download,
   RefreshCw,
-  ShoppingCart,
-  DollarSign,
   Eye,
   UserCheck,
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { format, subDays, startOfDay, endOfDay, isToday, isYesterday, startOfWeek, startOfMonth } from 'date-fns';
 
 interface LoginActivity {
@@ -428,30 +427,97 @@ export const AnalyticsDashboard: React.FC = () => {
   const exportData = () => {
     if (!analytics) return;
 
-    const csvData = [
-      ['Metric', 'Value'],
-      ['Total Members', analytics.totalMembers],
-      ['Active Today', analytics.activeToday],
-      ['Active This Week', analytics.activeThisWeek],
-      ['Active This Month', analytics.activeThisMonth],
-      ['Login Success Rate', `${analytics.loginSuccessRate.toFixed(2)}%`],
-      ['Mobile Login Success Rate', `${analytics.mobileLoginSuccessRate.toFixed(2)}%`],
-      ['Desktop Login Success Rate', `${analytics.desktopLoginSuccessRate.toFixed(2)}%`],
-      ['Total Revenue', `$${analytics.totalRevenue.toFixed(2)}`],
-      ['Average Order Value', `$${analytics.avgOrderValue.toFixed(2)}`],
-      ['Conversion Rate', `${analytics.conversionRate.toFixed(2)}%`],
-      ['Mobile Conversion Rate', `${analytics.mobileConversionRate.toFixed(2)}%`],
-      ['Desktop Conversion Rate', `${analytics.desktopConversionRate.toFixed(2)}%`],
-    ];
+    try {
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
 
-    const csvContent = csvData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analytics-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      // Analytics Summary Sheet
+      const summaryData = [
+        { Metric: 'Total Members', Value: analytics.totalMembers },
+        { Metric: 'Active Today', Value: analytics.activeToday },
+        { Metric: 'Active This Week', Value: analytics.activeThisWeek },
+        { Metric: 'Active This Month', Value: analytics.activeThisMonth },
+        { Metric: 'New Members This Month', Value: analytics.newMembersThisMonth },
+        { Metric: 'Login Success Rate', Value: `${analytics.loginSuccessRate.toFixed(2)}%` },
+        { Metric: 'Mobile Login Success Rate', Value: `${analytics.mobileLoginSuccessRate.toFixed(2)}%` },
+        { Metric: 'Desktop Login Success Rate', Value: `${analytics.desktopLoginSuccessRate.toFixed(2)}%` },
+        { Metric: 'Average Session Duration (minutes)', Value: analytics.avgSessionDuration.toFixed(1) },
+        { Metric: 'Report Generated', Value: format(new Date(), 'MMM dd, yyyy HH:mm') }
+      ];
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Analytics Summary');
+
+      // Daily Activity Sheet
+      const dailyActivitySheet = XLSX.utils.json_to_sheet(analytics.dailyActivity);
+      XLSX.utils.book_append_sheet(workbook, dailyActivitySheet, 'Daily Activity');
+
+      // Device Usage Sheet
+      const deviceData = analytics.topDevices.map(device => ({
+        Device: device.device,
+        'Login Count': device.count,
+        'Usage Percentage': `${device.percentage.toFixed(1)}%`,
+        'Success Rate': `${device.successRate.toFixed(1)}%`
+      }));
+      const deviceSheet = XLSX.utils.json_to_sheet(deviceData);
+      XLSX.utils.book_append_sheet(workbook, deviceSheet, 'Device Usage');
+
+      // Browser Usage Sheet
+      const browserData = analytics.topBrowsers.map(browser => ({
+        Browser: browser.browser,
+        'Login Count': browser.count,
+        'Usage Percentage': `${browser.percentage.toFixed(1)}%`,
+        'Success Rate': `${browser.successRate.toFixed(1)}%`
+      }));
+      const browserSheet = XLSX.utils.json_to_sheet(browserData);
+      XLSX.utils.book_append_sheet(workbook, browserSheet, 'Browser Usage');
+
+      // Member Segments Sheet
+      const segmentData = [
+        { Segment: 'Highly Active', Count: analytics.memberSegments.highly_active, Description: 'Daily users' },
+        { Segment: 'Moderately Active', Count: analytics.memberSegments.moderately_active, Description: 'Weekly users' },
+        { Segment: 'Low Activity', Count: analytics.memberSegments.low_activity, Description: 'Monthly users' },
+        { Segment: 'Inactive', Count: analytics.memberSegments.inactive, Description: 'No recent activity' }
+      ];
+      const segmentSheet = XLSX.utils.json_to_sheet(segmentData);
+      XLSX.utils.book_append_sheet(workbook, segmentSheet, 'Member Segments');
+
+      // Mobile Issues Sheet (if there are issues)
+      if (analytics.mobileIssues.loginFailures > 0) {
+        const mobileIssuesData = [
+          { Issue: 'Total Mobile Login Failures', Count: analytics.mobileIssues.loginFailures },
+          ...analytics.mobileIssues.commonErrors.map(error => ({
+            Issue: error.error,
+            Count: error.count
+          }))
+        ];
+        const mobileIssuesSheet = XLSX.utils.json_to_sheet(mobileIssuesData);
+        XLSX.utils.book_append_sheet(workbook, mobileIssuesSheet, 'Mobile Issues');
+      }
+
+      // Recent Login Activities Sheet
+      const recentActivities = loginActivities.slice(0, 100).map(activity => ({
+        'Login Time': format(new Date(activity.login_time), 'MMM dd, yyyy HH:mm'),
+        'Device Type': activity.device_type,
+        'Browser': activity.browser,
+        'Status': activity.success ? 'Success' : 'Failed',
+        'Session Duration (minutes)': activity.session_duration || 0,
+        'Member ID': activity.member_id
+      }));
+      const activitiesSheet = XLSX.utils.json_to_sheet(recentActivities);
+      XLSX.utils.book_append_sheet(workbook, activitiesSheet, 'Recent Activities');
+
+      // Generate filename with timestamp
+      const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+      const filename = `JHA_Analytics_Report_${timestamp}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(workbook, filename);
+      
+      alert(`Analytics report "${filename}" has been downloaded successfully!`);
+    } catch (error) {
+      console.error('Error exporting analytics:', error);
+      alert('Error exporting analytics data. Please try again.');
+    }
   };
 
   if (!user?.is_admin) {
