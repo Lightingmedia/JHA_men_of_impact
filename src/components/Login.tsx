@@ -50,7 +50,7 @@ export const Login: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Phone Number (any format)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -62,10 +62,13 @@ export const Login: React.FC = () => {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Enter your phone number"
+                  placeholder="9254343862 or (925) 434-3862"
                   required
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Enter your phone number in any format: 9254343862, (925) 434-3862, or +1 (925) 434-3862
+              </p>
             </div>
 
             {/* Error Message */}
