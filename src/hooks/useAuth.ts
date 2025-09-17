@@ -26,22 +26,23 @@ export const useAuthProvider = (): AuthContextType => {
   const signInWithPhone = async (phoneNumber: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      console.log('🔐 Attempting to sign in with phone:', phoneNumber.trim());
+      const cleanPhone = phoneNumber.trim();
+      console.log('🔐 Attempting to sign in with phone:', cleanPhone);
       
       // Check if user exists in members table
       const { data: member, error } = await supabase
         .from('members')
         .select('*')
-        .eq('phone', phoneNumber.trim())
+        .eq('phone', cleanPhone)
         .eq('is_active', true)
         .single();
 
       if (error) {
-        console.error('❌ Database error:', error);
+        console.error('❌ Database error:', error, 'for phone:', cleanPhone);
         if (error.code === 'PGRST116') {
           return { 
             success: false, 
-            error: 'Phone number not found. Please check your number.' 
+            error: `Phone number "${cleanPhone}" not found. Please contact admin to add your number.` 
           };
         }
         return { 

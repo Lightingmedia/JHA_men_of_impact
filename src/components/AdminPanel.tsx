@@ -129,6 +129,7 @@ export const AdminPanel: React.FC = () => {
 
   const addAllMembers = async () => {
     const membersToAdd = [
+      { phone: '+1 (925) 378-8342', full_name: 'Admin User', birth_month: null, birth_day: null, is_admin: true, is_active: true },
       { phone: '5101234501', full_name: 'Adedeji, Azeez Oyebade', birth_month: 7, birth_day: 30, is_admin: false, is_active: true },
       { phone: '5101234502', full_name: 'Adebowale, Kolade', birth_month: 6, birth_day: 11, is_admin: false, is_active: true },
       { phone: '5101234503', full_name: 'Akra, Victor', birth_month: 3, birth_day: 30, is_admin: false, is_active: true },
