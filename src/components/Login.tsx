@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { Users, Phone, Shield, AlertCircle, CheckCircle, Smartphone, Monitor, User, Calendar } from 'lucide-react';
+import { Users, Phone, Shield, AlertCircle, CheckCircle, Smartphone, Monitor, User, Calendar, Heart } from 'lucide-react';
 
 interface UserRegistrationData {
   phone: string;
@@ -169,19 +169,29 @@ export const Login: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Group Photo */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/jha-group-photo.jpg"
+          alt="JHA Men Of Impact Group"
+          className="w-full h-full object-cover opacity-20"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/70 to-blue-700/60"></div>
+      </div>
+      
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 relative z-10 border border-white/20">
         {/* Header */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-full p-3 sm:p-4 w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <Users size={deviceInfo?.isMobile ? 28 : 32} className="text-white" />
+          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-full p-3 sm:p-4 w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 flex items-center justify-center shadow-2xl ring-4 ring-blue-200">
+            <Heart size={deviceInfo?.isMobile ? 32 : 36} className="text-white" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">JHA Men Of Impact</h1>
-          <p className="text-sm sm:text-base text-blue-700 font-medium">Building Brotherhood, Creating Impact</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-2">JHA Men Of Impact</h1>
+          <p className="text-sm sm:text-base text-blue-700 font-semibold">Building Brotherhood • Creating Impact</p>
           
           {/* Device Info */}
           {deviceInfo && (
-            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-blue-500">
+            <div className="mt-3 flex items-center justify-center space-x-2 text-xs text-blue-600">
               {deviceInfo.isMobile ? <Smartphone size={14} /> : <Monitor size={14} />}
               <span>{deviceInfo.browser} on {deviceInfo.os}</span>
             </div>
@@ -197,13 +207,13 @@ export const Login: React.FC = () => {
                   Phone Number
                 </label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400" size={20} />
                   <input
                     type="text"
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white"
+                    className="w-full pl-12 pr-4 py-3 sm:py-4 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white/90"
                     placeholder="Enter your phone number"
                     required
                     autoComplete="tel"
@@ -226,7 +236,7 @@ export const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !phone.trim()}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 sm:py-4 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 touch-manipulation shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 sm:py-4 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 touch-manipulation shadow-xl hover:shadow-2xl transform hover:scale-105"
                 style={{ minHeight: '48px' }}
               >
                 {loading ? (
@@ -248,13 +258,13 @@ export const Login: React.FC = () => {
         {/* Registration Step */}
         {step === 'registration' && (
           <>
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
-                <User className="text-blue-700" size={20} />
-                <h3 className="text-blue-900 font-semibold">Welcome to JHA Men Of Impact!</h3>
+                <Heart className="text-blue-700" size={20} />
+                <h3 className="text-blue-900 font-bold">Welcome to JHA Men Of Impact!</h3>
               </div>
-              <p className="text-blue-800 text-sm">
-                Join our brotherhood of impactful men. Let's get you set up with some basic information.
+              <p className="text-blue-800 text-sm font-medium">
+                Join our brotherhood of impactful men. Building legacy together.
               </p>
             </div>
 
@@ -264,13 +274,13 @@ export const Login: React.FC = () => {
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400" size={20} />
                   <input
                     type="text"
                     id="full_name"
                     value={registrationData.full_name}
                     onChange={(e) => setRegistrationData(prev => ({ ...prev, full_name: e.target.value }))}
-                    className="w-full pl-12 pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white"
+                    className="w-full pl-12 pr-4 py-3 sm:py-4 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white/90"
                     placeholder="Enter your full name"
                     required
                     style={{ fontSize: '16px' }}
@@ -283,12 +293,12 @@ export const Login: React.FC = () => {
                   Birth Month
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400" size={20} />
                   <select
                     id="birth_month"
                     value={registrationData.birth_month}
                     onChange={(e) => setRegistrationData(prev => ({ ...prev, birth_month: parseInt(e.target.value) }))}
-                    className="w-full pl-12 pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white appearance-none"
+                    className="w-full pl-12 pr-4 py-3 sm:py-4 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base bg-white/90 appearance-none"
                     required
                     style={{ fontSize: '16px' }}
                   >
@@ -322,7 +332,7 @@ export const Login: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading || !registrationData.full_name.trim() || registrationData.birth_month === 0}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-xl hover:shadow-2xl transform hover:scale-105"
                 >
                   {loading ? (
                     <>
@@ -344,15 +354,15 @@ export const Login: React.FC = () => {
         {/* Registration Complete */}
         {step === 'complete' && (
           <div className="text-center space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
               <div className="flex items-center justify-center space-x-2 mb-4">
-                <CheckCircle className="text-blue-600" size={32} />
-                <h3 className="text-blue-800 font-bold text-lg">Welcome to the Brotherhood!</h3>
+                <Heart className="text-blue-600" size={32} />
+                <h3 className="text-blue-800 font-bold text-xl">Welcome to the Brotherhood!</h3>
               </div>
-              <p className="text-blue-700 text-sm mb-4">
+              <p className="text-blue-700 text-sm mb-4 font-medium">
                 {registrationData.full_name}, you're now part of JHA Men Of Impact!
               </p>
-              <p className="text-blue-600 text-sm">
+              <p className="text-blue-600 text-sm font-medium">
                 Your brotherhood journey begins now. Logging you in...
               </p>
             </div>
@@ -366,12 +376,12 @@ export const Login: React.FC = () => {
 
         {/* Returning User Welcome */}
         {userExists === true && step === 'phone' && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
-              <CheckCircle className="text-blue-600" size={20} />
-              <h3 className="text-blue-800 font-medium">Welcome back, Brother!</h3>
+              <Heart className="text-blue-600" size={20} />
+              <h3 className="text-blue-800 font-bold">Welcome back, Brother!</h3>
             </div>
-            <p className="text-blue-700 text-sm">
+            <p className="text-blue-700 text-sm font-medium">
               Great to see you again. Logging you into the brotherhood...
             </p>
           </div>
