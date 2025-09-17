@@ -104,7 +104,7 @@ export const AnalyticsDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState(7); // days
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedMetric, setSelectedMetric] = useState<'overview' | 'mobile' | 'orders'>('overview');
+  const [selectedMetric, setSelectedMetric] = useState<'overview' | 'mobile'>('overview');
 
   useEffect(() => {
     if (user?.is_admin) {
@@ -543,16 +543,6 @@ export const AnalyticsDashboard: React.FC = () => {
         >
           Mobile Issues
         </button>
-        <button
-          onClick={() => setSelectedMetric('orders')}
-          className={`px-4 py-2 rounded-md transition-colors ${
-            selectedMetric === 'orders' 
-              ? 'bg-white text-blue-600 shadow-sm' 
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          E-commerce
-        </button>
       </div>
 
       {/* Mobile Issues Alert */}
@@ -887,145 +877,6 @@ export const AnalyticsDashboard: React.FC = () => {
                     <span className="text-sm text-gray-700">Check authentication flow timing</span>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {selectedMetric === 'orders' && (
-        <>
-          {/* E-commerce KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold text-green-600">${analytics.totalRevenue.toFixed(0)}</p>
-                  <p className="text-xs text-green-600">Last {dateRange} days</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-lg">
-                  <DollarSign className="text-green-600" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                  <p className="text-2xl font-bold text-blue-600">{analytics.totalOrders}</p>
-                  <p className="text-xs text-blue-600">All statuses</p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-lg">
-                  <ShoppingCart className="text-blue-600" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-purple-600">${analytics.avgOrderValue.toFixed(0)}</p>
-                  <p className="text-xs text-purple-600">Per completed order</p>
-                </div>
-                <div className="bg-purple-100 p-3 rounded-lg">
-                  <Target className="text-purple-600" size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                  <p className="text-2xl font-bold text-orange-600">{analytics.conversionRate.toFixed(1)}%</p>
-                  <p className="text-xs text-orange-600">Login to purchase</p>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-lg">
-                  <TrendingUp className="text-orange-600" size={24} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* E-commerce Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Daily Revenue */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Daily Revenue & Orders</h3>
-                <LineChart className="text-gray-400" size={20} />
-              </div>
-              
-              <div className="space-y-3">
-                {analytics.dailyActivity.map((day, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{day.date}</span>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-sm font-medium">${day.revenue.toFixed(0)}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-medium">{day.orders} orders</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Top Product Categories */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Top Product Categories</h3>
-                <PieChart className="text-gray-400" size={20} />
-              </div>
-              
-              <div className="space-y-4">
-                {analytics.topCategories.slice(0, 5).map((category, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-900">{category.category}</span>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">${category.revenue.toFixed(0)}</p>
-                      <p className="text-xs text-gray-500">{category.orders} orders</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Device Conversion Comparison */}
-          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Device Conversion Rates</h3>
-              <BarChart3 className="text-gray-400" size={20} />
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <Monitor className="mx-auto text-blue-600 mb-2" size={32} />
-                <p className="text-2xl font-bold text-blue-700">{analytics.desktopConversionRate.toFixed(1)}%</p>
-                <p className="text-sm text-blue-600">Desktop Conversion</p>
-                <p className="text-xs text-gray-500 mt-1">Highest performing</p>
-              </div>
-              
-              <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
-                <Smartphone className="mx-auto text-red-600 mb-2" size={32} />
-                <p className="text-2xl font-bold text-red-700">{analytics.mobileConversionRate.toFixed(1)}%</p>
-                <p className="text-sm text-red-600">Mobile Conversion</p>
-                <p className="text-xs text-gray-500 mt-1">Needs improvement</p>
-              </div>
-              
-              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
-                <Target className="mx-auto text-green-600 mb-2" size={32} />
-                <p className="text-2xl font-bold text-green-700">{analytics.conversionRate.toFixed(1)}%</p>
-                <p className="text-sm text-green-600">Overall Conversion</p>
-                <p className="text-xs text-gray-500 mt-1">All devices</p>
               </div>
             </div>
           </div>
