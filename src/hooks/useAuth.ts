@@ -26,13 +26,13 @@ export const useAuthProvider = (): AuthContextType => {
   const signInWithPhone = async (phoneNumber: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      console.log('🔐 Attempting to sign in with phone:', phoneNumber);
+      console.log('🔐 Attempting to sign in with phone:', phoneNumber.trim());
       
       // Check if user exists in members table
       const { data: member, error } = await supabase
         .from('members')
         .select('*')
-        .eq('phone', phoneNumber)
+        .eq('phone', phoneNumber.trim())
         .eq('is_active', true)
         .single();
 
@@ -41,19 +41,19 @@ export const useAuthProvider = (): AuthContextType => {
         if (error.code === 'PGRST116') {
           return { 
             success: false, 
-            error: 'Phone number not found. Please check your number or contact an administrator.' 
+            error: 'Phone number not found. Please check your number.' 
           };
         }
         return { 
           success: false, 
-          error: 'Database connection error. Please try again.' 
+          error: 'Connection error. Please try again.' 
         };
       }
 
       if (!member) {
         return { 
           success: false, 
-          error: 'Phone number not found. Please check your number or contact an administrator.' 
+          error: 'Phone number not found. Please check your number.' 
         };
       }
 
@@ -68,7 +68,7 @@ export const useAuthProvider = (): AuthContextType => {
       console.error('❌ Sign in error:', error);
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Login failed. Please try again.' 
+        error: 'Login failed. Please try again.' 
       };
     } finally {
       setLoading(false);

@@ -10,6 +10,11 @@ export const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneNumber.trim()) {
+      setError('Please enter your phone number');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
@@ -19,6 +24,7 @@ export const Login: React.FC = () => {
         setError(result.error || 'Login failed. Please try again.');
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
