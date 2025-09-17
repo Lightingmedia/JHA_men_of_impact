@@ -205,24 +205,6 @@ export const Login: React.FC = () => {
                       />
                     </div>
 
-                    <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        id="password"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-base bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500"
-                        placeholder="Password"
-                        style={{ fontSize: '16px' }}
-                      />
-                    </div>
-
-                    <div className="text-center">
-                      <a href="#" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                        Forgot Password?
-                      </a>
-                    </div>
 
                     {error && (
                       <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 flex items-start space-x-3">
@@ -249,31 +231,6 @@ export const Login: React.FC = () => {
                         <span>Sign in</span>
                       )}
                     </button>
-
-                    <div className="text-center text-sm text-gray-600">
-                      Or Continue With
-                    </div>
-
-                    <div className="flex justify-center space-x-4">
-                      <button
-                        type="button"
-                        className="w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      >
-                        <Chrome className="text-gray-600" size={20} />
-                      </button>
-                      <button
-                        type="button"
-                        className="w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      >
-                        <Github className="text-gray-600" size={20} />
-                      </button>
-                      <button
-                        type="button"
-                        className="w-12 h-12 bg-white/90 backdrop-blur-sm border border-gray-300 rounded-xl flex items-center justify-center hover:bg-gray-50 transition-colors"
-                      >
-                        <Users className="text-blue-600" size={20} />
-                      </button>
-                    </div>
                   </form>
                 </>
               )}
@@ -415,16 +372,6 @@ export const Login: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Right Side - Group Photo */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        {/* Background with decorative elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600">
-          {/* Decorative floating elements */}
-          <div className="absolute top-20 left-20 w-16 h-16 bg-blue-300/30 rounded-full blur-xl"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 bg-blue-200/20 rounded-full blur-2xl"></div>
           <div className="absolute bottom-32 left-16 w-20 h-20 bg-blue-400/25 rounded-full blur-xl"></div>
           <div className="absolute bottom-20 right-20 w-12 h-12 bg-blue-300/30 rounded-full blur-lg"></div>
           <div className="absolute top-1/2 left-1/4 w-8 h-8 bg-blue-200/40 rounded-full blur-md"></div>
