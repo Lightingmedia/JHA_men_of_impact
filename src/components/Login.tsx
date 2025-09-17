@@ -61,13 +61,15 @@ export const Login: React.FC = () => {
                   id="phone"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-base"
+                  style={{ fontSize: '16px' }}
                   placeholder="9254343862 or (925) 434-3862"
                   required
+                  autoComplete="tel"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Enter your phone number in any format: 9254343862, (925) 434-3862, or +1 (925) 434-3862
+                Enter your phone number: 9254343862
               </p>
             </div>
 
