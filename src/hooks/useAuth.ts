@@ -109,42 +109,6 @@ export const useAuthProvider = (): AuthContextType => {
     }
   };
 
-          return { 
-            success: false, 
-            error: `Phone number "${cleanPhone}" not found. Please contact admin to add your number.` 
-          };
-        }
-        return { 
-          success: false, 
-          error: 'Connection error. Please try again.' 
-        };
-      }
-
-      if (!member) {
-        return { 
-          success: false, 
-          error: 'Phone number not found. Please check your number.' 
-        };
-      }
-
-      console.log('✅ User found:', member.full_name);
-      setUser(member);
-      
-      // Store user session in localStorage
-      localStorage.setItem('jha-user', JSON.stringify(member));
-      
-      return { success: true };
-    } catch (error) {
-      console.error('❌ Sign in error:', error);
-      return { 
-        success: false, 
-        error: 'Login failed. Please try again.' 
-      };
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signOut = async (): Promise<{ success: boolean; error?: string }> => {
     try {
       setUser(null);
