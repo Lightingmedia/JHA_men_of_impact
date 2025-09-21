@@ -109,6 +109,7 @@ export const useAuthProvider = (): AuthContextType => {
         .eq('phone', inputPhone)
         .eq('is_active', true)
         .single();
+      }
 
       if (!member) {
         console.error('❌ No user found for phone:', inputPhone);
