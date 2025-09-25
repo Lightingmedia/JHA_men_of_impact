@@ -17,6 +17,7 @@ export type Member = {
   birth_month?: number;
   birth_day?: number;
   is_admin: boolean;
+  is_super_admin: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;

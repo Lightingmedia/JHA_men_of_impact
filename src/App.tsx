@@ -8,6 +8,7 @@ import { MemberDirectory } from './components/MemberDirectory';
 import { BirthdayCalendar } from './components/BirthdayCalendar';
 import { ProfilePage } from './components/ProfilePage';
 import { AdminPanel } from './components/AdminPanel';
+import { SuperAdminPanel } from './components/SuperAdminPanel';
 import { VideoCall } from './components/VideoCall';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { MobileDebugger } from './components/MobileDebugger';
@@ -42,6 +43,8 @@ const AppContent: React.FC = () => {
         return <AnalyticsDashboard />;
       case 'debugger':
         return <MobileDebugger />;
+      case 'superadmin':
+        return user.is_super_admin ? <SuperAdminPanel /> : <MemberDirectory />;
       case 'admin':
         return user.is_admin ? <AdminPanel /> : <MemberDirectory />;
       default:
