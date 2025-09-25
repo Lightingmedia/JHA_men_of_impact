@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, Member } from '../lib/supabase';
-import { Calendar, Gift, User, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { Calendar, Gift, User, ChevronLeft, ChevronRight, CalendarDays, Download, FileSpreadsheet } from 'lucide-react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, getDate, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
+import * as XLSX from 'xlsx';
 
 interface BirthdayMember extends Member {
   birthday_this_year: Date;
@@ -70,6 +71,117 @@ export const BirthdayCalendar: React.FC = () => {
     return members.filter(member => member.birth_month === currentDate.getMonth() + 1);
   };
 
+  const exportBirthdaysToExcel = () => {
+    try {
+      // Prepare birthday data for export
+      const birthdayData = members.map(member => ({
+        'Full Name': member.full_name,
+        'Phone Number': member.phone,
+        'Birth Month': member.birth_month ? months[member.birth_month] : 'Not set',
+        'Birth Day': member.birth_day || 'Not set',
+        'Birthday This Year': member.birth_month && member.birth_day 
+          ? format(new Date(new Date().getFullYear(), member.birth_month - 1, member.birth_day), 'MMMM d, yyyy')
+          : 'Not set',
+        'Days Until Birthday': member.birth_month && member.birth_day 
+          ? (() => {
+              const today = new Date();
+              const thisYear = new Date().getFullYear();
+              let birthday = new Date(thisYear, member.birth_month - 1, member.birth_day);
+              
+              // If birthday has passed this year, calculate for next year
+              if (birthday < today) {
+                birthday = new Date(thisYear + 1, member.birth_month - 1, member.birth_day);
+              }
+              
+              const diffTime = birthday.getTime() - today.getTime();
+              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+              return diffDays;
+            })()
+          : 'N/A',
+        'Status': member.is_active ? 'Active' : 'Inactive',
+        'Role': member.is_admin ? 'Administrator' : 'Member'
+      })).sort((a, b) => {
+        // Sort by month, then by day
+        const monthA = months.indexOf(a['Birth Month']);
+        const monthB = months.indexOf(b['Birth Month']);
+        if (monthA !== monthB) return monthA - monthB;
+        
+        const dayA = typeof a['Birth Day'] === 'number' ? a['Birth Day'] : 999;
+        const dayB = typeof b['Birth Day'] === 'number' ? b['Birth Day'] : 999;
+        return dayA - dayB;
+      });
+
+      // Create workbook with multiple sheets
+      const workbook = XLSX.utils.book_new();
+
+      // Main birthdays sheet
+      const birthdaysSheet = XLSX.utils.json_to_sheet(birthdayData);
+      XLSX.utils.book_append_sheet(workbook, birthdaysSheet, 'All Birthdays');
+
+      // Monthly breakdown sheets
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+
+      monthNames.forEach((monthName, index) => {
+        const monthData = birthdayData.filter(member => member['Birth Month'] === monthName);
+        if (monthData.length > 0) {
+          const monthSheet = XLSX.utils.json_to_sheet(monthData);
+          XLSX.utils.book_append_sheet(workbook, monthSheet, monthName);
+        }
+      });
+
+      // Upcoming birthdays sheet (next 30 days)
+      const upcomingData = birthdayData
+        .filter(member => {
+          const daysUntil = member['Days Until Birthday'];
+          return typeof daysUntil === 'number' && daysUntil <= 30;
+        })
+        .sort((a, b) => (a['Days Until Birthday'] as number) - (b['Days Until Birthday'] as number));
+
+      if (upcomingData.length > 0) {
+        const upcomingSheet = XLSX.utils.json_to_sheet(upcomingData);
+        XLSX.utils.book_append_sheet(workbook, upcomingSheet, 'Upcoming (30 days)');
+      }
+
+      // Summary statistics sheet
+      const summaryData = [
+        { Statistic: 'Total Members', Value: members.length },
+        { Statistic: 'Members with Birthdays Set', Value: members.filter(m => m.birth_month && m.birth_day).length },
+        { Statistic: 'Members without Birthdays', Value: members.filter(m => !m.birth_month || !m.birth_day).length },
+        { Statistic: 'Upcoming Birthdays (7 days)', Value: upcomingBirthdays.length },
+        { Statistic: 'Upcoming Birthdays (30 days)', Value: upcomingData.length },
+        { Statistic: 'Export Date', Value: format(new Date(), 'MMMM d, yyyy HH:mm') },
+        { Statistic: '', Value: '' },
+        { Statistic: 'Monthly Breakdown:', Value: '' },
+        ...monthNames.map(month => ({
+          Statistic: month,
+          Value: birthdayData.filter(m => m['Birth Month'] === month).length
+        }))
+      ];
+      const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+      // Generate filename with timestamp
+      const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm');
+      const filename = `JHA_Birthdays_${timestamp}.xlsx`;
+
+      // Save file
+      XLSX.writeFile(workbook, filename);
+      
+      alert(`Birthday calendar "${filename}" has been exported successfully!`);
+    } catch (error) {
+      console.error('Error exporting birthdays:', error);
+      alert('Error exporting birthday data. Please try again.');
+    }
+  };
+
+  const months = [
+    'Not set', 'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -83,9 +195,19 @@ export const BirthdayCalendar: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Birthday Calendar</h2>
-        <p className="text-gray-600">Keep track of upcoming celebrations</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Birthday Calendar</h2>
+          <p className="text-gray-600 dark:text-gray-400">Keep track of upcoming celebrations</p>
+        </div>
+        
+        <button
+          onClick={exportBirthdaysToExcel}
+          className="inline-flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+        >
+          <FileSpreadsheet size={20} />
+          <span>Export to Excel</span>
+        </button>
       </div>
 
       {/* Current Month Birthdays Summary */}
