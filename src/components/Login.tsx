@@ -40,13 +40,13 @@ export const Login: React.FC = () => {
             <div className="flex justify-center mb-4">
               <div className="bg-blue-600 p-3 rounded-full">
                 <Users className="text-white" size={32} />
-                <p className="text-red-600 text-xs mt-2">
-                  If you're a registered member and still can't login, please contact an administrator.
-                </p>
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">JHA Men Of Impact</h1>
             <p className="text-gray-600">Enter your phone number to sign in</p>
+            <p className="text-red-600 text-xs mt-2">
+              If you're a registered member and still can't login, please contact an administrator.
+            </p>
           </div>
 
           {/* Login Form */}
@@ -116,9 +116,11 @@ export const Login: React.FC = () => {
           {/* Debug Info */}
           <div className="mt-6 p-3 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 text-center">
-            <strong>Supported formats:</strong><br/>
-            (555) 123-4567 • 555-123-4567 • 555.123.4567<br/>
-            555 123 4567 • +1 555 123 4567 • 5551234567
+              <strong>Supported formats:</strong><br/>
+              (555) 123-4567 • 555-123-4567 • 555.123.4567<br/>
+              555 123 4567 • +1 555 123 4567 • 5551234567
+            </p>
+            </p>
           </div>
         </div>
       </div>
