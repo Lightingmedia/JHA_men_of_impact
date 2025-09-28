@@ -122,27 +122,8 @@ export const Login: React.FC = () => {
             </button>
           </form>
           
-          {/* Help Section */}
-          <div className="mt-8 relative z-10">
-            <div className="bg-gradient-to-r from-purple-50/80 to-blue-50/80 backdrop-blur-sm rounded-2xl p-4 border border-purple-100">
-              <h4 className="font-semibold text-gray-800 mb-2 flex items-center space-x-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span>Flexible Login System</span>
-              </h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                <p>✓ Any phone format works (with or without formatting)</p>
-                <p>✓ Partial numbers accepted for quick access</p>
-                <p>✓ Smart matching finds your registration automatically</p>
-                <p>✓ Secure authentication for all registered members</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="mt-6 text-center relative z-10">
-            <p className="text-xs text-gray-500">
-              Secure member portal for JHA Men Of Impact community
-            </p>
+          {/* Decorative Footer */}
+          <div className="mt-8 text-center relative z-10">
             <div className="flex justify-center items-center space-x-2 mt-2">
               <div className="w-1 h-1 bg-purple-400 rounded-full"></div>
               <div className="w-1 h-1 bg-pink-400 rounded-full"></div>
