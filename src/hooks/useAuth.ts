@@ -32,7 +32,8 @@ export const useAuthProvider = (): AuthContextType => {
       // Get ALL members from database (no restrictions)
       const { data: allMembers, error: fetchError } = await supabase
         .from('members')
-        .select('*');
+        .select('*')
+        .order('full_name');
 
       if (fetchError) {
         console.error('❌ Database fetch error:', fetchError);
@@ -45,7 +46,7 @@ export const useAuthProvider = (): AuthContextType => {
       }
 
       console.log('📱 Available members:', allMembers.length);
-      console.log('📱 Sample phone numbers:', allMembers.slice(0, 5).map(m => m.phone));
+      console.log('📱 Total members in database:', allMembers.length);
 
       // Ultra-flexible phone matching - try every possible way
       let foundMember = null;
@@ -58,8 +59,6 @@ export const useAuthProvider = (): AuthContextType => {
       for (const member of allMembers) {
         const memberPhone = member.phone;
         const memberDigits = memberPhone.replace(/\D/g, '');
-        
-        console.log(`🔍 Comparing input "${inputDigits}" with member "${memberPhone}" (digits: "${memberDigits}")`);
         
         // Try every possible matching strategy
         const matches = [
@@ -136,14 +135,11 @@ export const useAuthProvider = (): AuthContextType => {
 
       if (!foundMember) {
         console.error('❌ No matching member found for input:', inputPhone);
-        console.log('📋 Available phone numbers in database:');
-        allMembers.forEach((member, index) => {
-          console.log(`${index + 1}. ${member.full_name}: ${member.phone}`);
-        });
+        console.log('📋 Total members checked:', allMembers.length);
         
         return { 
           success: false, 
-          error: `Phone number not found. Try any of these formats: ${allMembers.slice(0, 3).map(m => m.phone).join(', ')}${allMembers.length > 3 ? ` or any of ${allMembers.length - 3} others` : ''}` 
+          error: `Phone number not found in database. Please check your number and try again, or contact an administrator.` 
         };
       }
 
