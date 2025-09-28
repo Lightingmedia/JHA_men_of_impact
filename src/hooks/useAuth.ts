@@ -26,104 +26,110 @@ export const useAuthProvider = (): AuthContextType => {
   const signInWithPhone = async (phoneNumber: string): Promise<{ success: boolean; error?: string }> => {
     try {
       setLoading(true);
-      const inputPhone = phoneNumber.trim().replace(/\D/g, ''); // Remove all non-digits
-      console.log('🔐 Attempting to sign in with phone (digits only):', inputPhone);
+      const inputPhone = phoneNumber.trim();
+      console.log('🔐 Attempting to sign in with phone:', inputPhone);
       
-      // Try multiple phone number formats to match any number in database
-      const phoneVariants = [
-        inputPhone, // Just digits: 9254343862
-        `+1${inputPhone}`, // With country code: +19254343862
-        `(${inputPhone.slice(0,3)}) ${inputPhone.slice(3,6)}-${inputPhone.slice(6)}`, // Formatted: (925) 434-3862
-        `+1 (${inputPhone.slice(0,3)}) ${inputPhone.slice(3,6)}-${inputPhone.slice(6)}`, // Full format: +1 (925) 434-3862
-        `${inputPhone.slice(0,3)}-${inputPhone.slice(3,6)}-${inputPhone.slice(6)}`, // Dashed: 925-434-3862
-        `${inputPhone.slice(0,3)}.${inputPhone.slice(3,6)}.${inputPhone.slice(6)}`, // Dotted: 925.434.3862
-        `${inputPhone.slice(0,3)} ${inputPhone.slice(3,6)} ${inputPhone.slice(6)}`, // Spaced: 925 434 3862
-      ];
+      // Get ALL active members from database
+      const { data: allMembers, error: fetchError } = await supabase
+        .from('members')
+        .select('*')
+        .eq('is_active', true);
 
-      console.log('🔍 Trying phone variants:', phoneVariants);
+      if (fetchError) {
+        console.error('❌ Database fetch error:', fetchError);
+        return { success: false, error: 'Database connection error. Please try again.' };
+      }
 
-      // Try exact matches first
-      let member = null;
-      let error = null;
+      if (!allMembers || allMembers.length === 0) {
+        console.error('❌ No active members found in database');
+        return { success: false, error: 'No active members found. Please contact admin.' };
+      }
 
-      for (const variant of phoneVariants) {
-        const { data, error: queryError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('phone', variant)
-          .eq('is_active', true)
-          .single();
+      console.log('📱 Available members:', allMembers.length);
+      console.log('📱 Available phone numbers:', allMembers.map(m => m.phone));
 
-        if (data && !queryError) {
-          member = data;
-          console.log('✅ Found exact match with variant:', variant);
+      // Try to find matching member with flexible phone matching
+      let foundMember = null;
+
+      // Remove all non-digits from input for comparison
+      const inputDigits = inputPhone.replace(/\D/g, '');
+      console.log('🔍 Input digits only:', inputDigits);
+
+      // Search through all members
+      for (const member of allMembers) {
+        const memberPhone = member.phone;
+        const memberDigits = memberPhone.replace(/\D/g, '');
+        
+        console.log(`🔍 Comparing input "${inputDigits}" with member "${memberPhone}" (digits: "${memberDigits}")`);
+        
+        // Try multiple matching strategies
+        const matches = [
+          // Exact match
+          inputPhone === memberPhone,
+          // Digits only match
+          inputDigits === memberDigits,
+          // Input contains member digits
+          inputDigits.includes(memberDigits),
+          // Member digits contain input
+          memberDigits.includes(inputDigits),
+          // Last 10 digits match (US phone numbers)
+          inputDigits.length >= 10 && memberDigits.length >= 10 && 
+          inputDigits.slice(-10) === memberDigits.slice(-10),
+          // Last 7 digits match (local numbers)
+          inputDigits.length >= 7 && memberDigits.length >= 7 && 
+          inputDigits.slice(-7) === memberDigits.slice(-7),
+          // Case insensitive partial match
+          memberPhone.toLowerCase().includes(inputPhone.toLowerCase()),
+          inputPhone.toLowerCase().includes(memberPhone.toLowerCase())
+        ];
+
+        if (matches.some(match => match)) {
+          foundMember = member;
+          console.log('✅ Found matching member:', member.full_name, 'with phone:', member.phone);
           break;
         }
       }
 
-      // If no exact match, try fuzzy search on all active members
-      if (!member) {
-        console.log('🔍 No exact match, trying fuzzy search...');
-        const { data: allMembers, error: allError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('is_active', true);
-
-        if (allMembers && !allError) {
-          // Find member by matching digits only
-          member = allMembers.find(m => {
-            const memberDigits = m.phone.replace(/\D/g, '');
-            return memberDigits === inputPhone || 
-                   memberDigits.endsWith(inputPhone) || 
-                   inputPhone.endsWith(memberDigits);
-          });
-
-          if (member) {
-            console.log('✅ Found fuzzy match:', member.phone, 'for input:', inputPhone);
+      // If still no match, try fuzzy search on any part of the phone number
+      if (!foundMember) {
+        console.log('🔍 Trying fuzzy search...');
+        for (const member of allMembers) {
+          const memberPhone = member.phone.replace(/\D/g, '');
+          const inputClean = inputPhone.replace(/\D/g, '');
+          
+          // Check if any 4+ digit sequence matches
+          if (inputClean.length >= 4 && memberPhone.includes(inputClean)) {
+            foundMember = member;
+            console.log('✅ Found fuzzy match:', member.full_name);
+            break;
+          }
+          
+          if (memberPhone.length >= 4 && inputClean.includes(memberPhone)) {
+            foundMember = member;
+            console.log('✅ Found reverse fuzzy match:', member.full_name);
+            break;
           }
         }
       }
 
-      // Final check with LIKE search for partial matches
-      if (!member) {
-        console.log('🔍 Trying LIKE search for partial matches...');
-        const { data: likeResults, error: likeError } = await supabase
-          .from('members')
-          .select('*')
-          .like('phone', `%${inputPhone}%`)
-          .eq('is_active', true);
-
-        if (likeResults && likeResults.length > 0 && !likeError) {
-          member = likeResults[0]; // Take first match
-          console.log('✅ Found LIKE match:', member.phone);
-        }
-      }
-
-      if (!member) {
-        console.error('❌ No user found for phone:', inputPhone);
+      if (!foundMember) {
+        console.error('❌ No matching member found for input:', inputPhone);
+        console.log('📋 Available phone numbers in database:');
+        allMembers.forEach((member, index) => {
+          console.log(`${index + 1}. ${member.full_name}: ${member.phone}`);
+        });
         
-        // Get all active phone numbers for debugging
-        const { data: allNumbers } = await supabase
-        .from('members')
-        .select('*')
-        .eq('phone', inputPhone)
-        .eq('is_active', true)
-        .single();
-      }
-
-      if (!member) {
-        console.error('❌ No user found for phone:', inputPhone);
         return { 
           success: false, 
-          error: `Phone number ${inputPhone} not found. Please contact admin.` 
+          error: `Phone number not found. Available numbers include: ${allMembers.slice(0, 3).map(m => m.phone).join(', ')}${allMembers.length > 3 ? '...' : ''}` 
         };
       }
 
-      console.log('✅ User found:', member.full_name);
-      setUser(member);
+      console.log('✅ Login successful for:', foundMember.full_name);
+      setUser(foundMember);
       
       // Store user session in localStorage
-      localStorage.setItem('jha-user', JSON.stringify(member));
+      localStorage.setItem('jha-user', JSON.stringify(foundMember));
       
       return { success: true };
     } catch (error) {
@@ -164,17 +170,19 @@ export const useAuthProvider = (): AuthContextType => {
         // Verify user still exists and is active
         const { data: member, error } = await supabase
           .from('members')
-          .select('phone')
-          .eq('is_active', true);
+          .select('*')
+          .eq('id', userData.id)
+          .eq('is_active', true)
+          .single();
         
-        console.log('📱 Available phone numbers in database:', allNumbers?.map(n => n.phone));
-
         if (!error && member) {
           setUser(member);
           // Update stored user data
+          localStorage.setItem('jha-user', JSON.stringify(member));
+        } else {
           // User no longer exists or is inactive
           localStorage.removeItem('jha-user');
-          error: `Phone number not found. Available formats: ${allNumbers?.slice(0,3).map(n => n.phone).join(', ')}...` 
+          setUser(null);
         }
       }
     } catch (error) {
