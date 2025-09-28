@@ -29,11 +29,10 @@ export const useAuthProvider = (): AuthContextType => {
       const inputPhone = phoneNumber.trim();
       console.log('🔐 Attempting to sign in with phone:', inputPhone);
       
-      // Get ALL active members from database
+      // Get ALL members from database (no restrictions)
       const { data: allMembers, error: fetchError } = await supabase
         .from('members')
-        .select('*')
-        .eq('is_active', true);
+        .select('*');
 
       if (fetchError) {
         console.error('❌ Database fetch error:', fetchError);
@@ -46,41 +45,51 @@ export const useAuthProvider = (): AuthContextType => {
       }
 
       console.log('📱 Available members:', allMembers.length);
-      console.log('📱 Available phone numbers:', allMembers.map(m => m.phone));
+      console.log('📱 Sample phone numbers:', allMembers.slice(0, 5).map(m => m.phone));
 
-      // Try to find matching member with flexible phone matching
+      // Ultra-flexible phone matching - try every possible way
       let foundMember = null;
 
       // Remove all non-digits from input for comparison
       const inputDigits = inputPhone.replace(/\D/g, '');
       console.log('🔍 Input digits only:', inputDigits);
 
-      // Search through all members
+      // Search through all members with multiple strategies
       for (const member of allMembers) {
         const memberPhone = member.phone;
         const memberDigits = memberPhone.replace(/\D/g, '');
         
         console.log(`🔍 Comparing input "${inputDigits}" with member "${memberPhone}" (digits: "${memberDigits}")`);
         
-        // Try multiple matching strategies
+        // Try every possible matching strategy
         const matches = [
           // Exact match
           inputPhone === memberPhone,
+          inputPhone.toLowerCase() === memberPhone.toLowerCase(),
           // Digits only match
           inputDigits === memberDigits,
           // Input contains member digits
           inputDigits.includes(memberDigits),
           // Member digits contain input
           memberDigits.includes(inputDigits),
+          // Reverse contains
+          memberPhone.includes(inputPhone),
+          inputPhone.includes(memberPhone),
           // Last 10 digits match (US phone numbers)
           inputDigits.length >= 10 && memberDigits.length >= 10 && 
           inputDigits.slice(-10) === memberDigits.slice(-10),
           // Last 7 digits match (local numbers)
           inputDigits.length >= 7 && memberDigits.length >= 7 && 
           inputDigits.slice(-7) === memberDigits.slice(-7),
+          // First 7 digits match
+          inputDigits.length >= 7 && memberDigits.length >= 7 && 
+          inputDigits.slice(0, 7) === memberDigits.slice(0, 7),
           // Case insensitive partial match
           memberPhone.toLowerCase().includes(inputPhone.toLowerCase()),
-          inputPhone.toLowerCase().includes(memberPhone.toLowerCase())
+          inputPhone.toLowerCase().includes(memberPhone.toLowerCase()),
+          // Any 4+ digit sequence match
+          inputDigits.length >= 4 && memberDigits.includes(inputDigits),
+          memberDigits.length >= 4 && inputDigits.includes(memberDigits)
         ];
 
         if (matches.some(match => match)) {
@@ -90,7 +99,7 @@ export const useAuthProvider = (): AuthContextType => {
         }
       }
 
-      // If still no match, try fuzzy search on any part of the phone number
+      // Final attempt: super fuzzy search
       if (!foundMember) {
         console.log('🔍 Trying fuzzy search...');
         for (const member of allMembers) {
@@ -98,7 +107,7 @@ export const useAuthProvider = (): AuthContextType => {
           const inputClean = inputPhone.replace(/\D/g, '');
           
           // Check if any 4+ digit sequence matches
-          if (inputClean.length >= 4 && memberPhone.includes(inputClean)) {
+          if (inputClean.length >= 3 && memberPhone.includes(inputClean)) {
             foundMember = member;
             console.log('✅ Found fuzzy match:', member.full_name);
             break;
@@ -107,6 +116,19 @@ export const useAuthProvider = (): AuthContextType => {
           if (memberPhone.length >= 4 && inputClean.includes(memberPhone)) {
             foundMember = member;
             console.log('✅ Found reverse fuzzy match:', member.full_name);
+            break;
+          }
+        }
+      }
+
+      // Last resort: try matching any 3+ characters
+      if (!foundMember && inputPhone.length >= 3) {
+        console.log('🔍 Last resort search...');
+        for (const member of allMembers) {
+          if (member.phone.toLowerCase().includes(inputPhone.toLowerCase()) ||
+              inputPhone.toLowerCase().includes(member.phone.toLowerCase())) {
+            foundMember = member;
+            console.log('✅ Found last resort match:', member.full_name);
             break;
           }
         }
@@ -121,7 +143,7 @@ export const useAuthProvider = (): AuthContextType => {
         
         return { 
           success: false, 
-          error: `Phone number not found. Available numbers include: ${allMembers.slice(0, 3).map(m => m.phone).join(', ')}${allMembers.length > 3 ? '...' : ''}` 
+          error: `Phone number not found. Try any of these formats: ${allMembers.slice(0, 3).map(m => m.phone).join(', ')}${allMembers.length > 3 ? ` or any of ${allMembers.length - 3} others` : ''}` 
         };
       }
 
@@ -172,7 +194,6 @@ export const useAuthProvider = (): AuthContextType => {
           .from('members')
           .select('*')
           .eq('id', userData.id)
-          .eq('is_active', true)
           .single();
         
         if (!error && member) {

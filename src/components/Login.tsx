@@ -69,7 +69,7 @@ export const Login: React.FC = () => {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Enter your phone number in any format - the system will find it automatically
+                Enter ANY phone number from the database - all formats accepted, no restrictions
               </p>
             </div>
 
@@ -99,10 +99,26 @@ export const Login: React.FC = () => {
                 <span>Sign In</span>
               )}
             </button>
-            <p className="text-xs text-gray-500 mt-1">
-              All phone numbers in the database are accepted - no restrictions
-            </p>
+            
+            {/* Help Text */}
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                ✅ All phone numbers in database work<br/>
+                ✅ Any format accepted (with/without formatting)<br/>
+                ✅ Partial numbers work too<br/>
+                ✅ No restrictions whatsoever
+              </p>
+            </div>
           </form>
+          
+          {/* Debug Info */}
+          <div className="mt-6 p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-600 text-center">
+              <strong>Examples that work:</strong><br/>
+              9254343862 • (925) 434-3862 • +1-925-434-3862<br/>
+              925.434.3862 • 925 434 3862 • even just 4343862
+            </p>
+          </div>
         </div>
       </div>
     </div>
