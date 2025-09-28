@@ -40,7 +40,7 @@ export const Login: React.FC = () => {
             <div className="flex justify-center mb-4">
               <div className="bg-blue-600 p-3 rounded-full">
                 <Users className="text-white" size={32} />
-              placeholder="Enter your phone number (any format)"
+              </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">JHA Men Of Impact</h1>
             <p className="text-gray-600">Enter your phone number to sign in</p>
@@ -98,7 +98,10 @@ export const Login: React.FC = () => {
               ) : (
                 <span>Sign In</span>
               )}
-            All phone numbers in the database are accepted - no restrictions
+            </button>
+            <p className="text-xs text-gray-500 mt-1">
+              All phone numbers in the database are accepted - no restrictions
+            </p>
           </form>
         </div>
       </div>
