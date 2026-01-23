@@ -25,10 +25,6 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (!user) {
-    return <Login />;
-  }
-
   const renderTabContent = () => {
     switch (currentTab) {
       case 'directory':
@@ -44,9 +40,9 @@ const AppContent: React.FC = () => {
       case 'debugger':
         return <MobileDebugger />;
       case 'superadmin':
-        return user.is_super_admin ? <SuperAdminPanel /> : <MemberDirectory />;
+        return user?.is_super_admin ? <SuperAdminPanel /> : <MemberDirectory />;
       case 'admin':
-        return user.is_admin ? <AdminPanel /> : <MemberDirectory />;
+        return user?.is_admin ? <AdminPanel /> : <MemberDirectory />;
       default:
         return <MemberDirectory />;
     }
