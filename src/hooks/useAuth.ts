@@ -179,33 +179,28 @@ export const useAuthProvider = (): AuthContextType => {
   const refreshUser = async (): Promise<void> => {
     try {
       setLoading(true);
-      
+
       // Check for stored user session
       const storedUser = localStorage.getItem('jha-user');
       if (storedUser) {
         const userData = JSON.parse(storedUser);
-        
-        // Verify user still exists and is active
-        const { data: member, error } = await supabase
+        setUser(userData);
+      } else {
+        // Load first member as default user
+        const { data: members } = await supabase
           .from('members')
           .select('*')
-          .eq('id', userData.id)
+          .limit(1)
           .single();
-        
-        if (!error && member) {
-          setUser(member);
-          // Update stored user data
-          localStorage.setItem('jha-user', JSON.stringify(member));
-        } else {
-          // User no longer exists or is inactive
-          localStorage.removeItem('jha-user');
-          setUser(null);
+
+        if (members) {
+          setUser(members);
+          localStorage.setItem('jha-user', JSON.stringify(members));
         }
       }
     } catch (error) {
       console.error('❌ Refresh user error:', error);
-      localStorage.removeItem('jha-user');
-      setUser(null);
+      // Still set loading to false even on error
     } finally {
       setLoading(false);
     }
