@@ -190,12 +190,11 @@ export const useAuthProvider = (): AuthContextType => {
         const { data: members } = await supabase
           .from('members')
           .select('*')
-          .limit(1)
-          .single();
+          .limit(1);
 
-        if (members) {
-          setUser(members);
-          localStorage.setItem('jha-user', JSON.stringify(members));
+        if (members && members.length > 0) {
+          setUser(members[0]);
+          localStorage.setItem('jha-user', JSON.stringify(members[0]));
         }
       }
     } catch (error) {
