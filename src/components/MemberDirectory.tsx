@@ -73,6 +73,29 @@ export const MemberDirectory: React.FC = () => {
         </div>
       </div>
 
+      {/* Names List */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-sm font-semibold text-gray-900">Member Names</h3>
+        </div>
+        <div className="max-h-96 overflow-y-auto">
+          <ul className="divide-y divide-gray-200">
+            {filteredMembers.map((member) => (
+              <li key={member.id} className="px-4 sm:px-6 py-3 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-900 font-medium">{member.full_name}</span>
+                  {member.is_admin && (
+                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      Admin
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
       {/* Members Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {filteredMembers.map((member) => (
