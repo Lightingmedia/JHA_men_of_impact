@@ -48,90 +48,14 @@ export const useAuthProvider = (): AuthContextType => {
       console.log('📱 Available members:', allMembers.length);
       console.log('📱 Total members in database:', allMembers.length);
 
-      // Ultra-flexible phone matching - try every possible way
-      let foundMember = null;
-
-      // Remove all non-digits from input for comparison
+      // Stricter phone number matching
       const inputDigits = inputPhone.replace(/\D/g, '');
-      console.log('🔍 Input digits only:', inputDigits);
+      console.log('🔍 Input digits for matching:', inputDigits);
 
-      // Search through all members with multiple strategies
-      for (const member of allMembers) {
-        const memberPhone = member.phone;
-        const memberDigits = memberPhone.replace(/\D/g, '');
-        
-        // Try every possible matching strategy
-        const matches = [
-          // Exact match
-          inputPhone === memberPhone,
-          inputPhone.toLowerCase() === memberPhone.toLowerCase(),
-          // Digits only match
-          inputDigits === memberDigits,
-          // Input contains member digits
-          inputDigits.includes(memberDigits),
-          // Member digits contain input
-          memberDigits.includes(inputDigits),
-          // Reverse contains
-          memberPhone.includes(inputPhone),
-          inputPhone.includes(memberPhone),
-          // Last 10 digits match (US phone numbers)
-          inputDigits.length >= 10 && memberDigits.length >= 10 && 
-          inputDigits.slice(-10) === memberDigits.slice(-10),
-          // Last 7 digits match (local numbers)
-          inputDigits.length >= 7 && memberDigits.length >= 7 && 
-          inputDigits.slice(-7) === memberDigits.slice(-7),
-          // First 7 digits match
-          inputDigits.length >= 7 && memberDigits.length >= 7 && 
-          inputDigits.slice(0, 7) === memberDigits.slice(0, 7),
-          // Case insensitive partial match
-          memberPhone.toLowerCase().includes(inputPhone.toLowerCase()),
-          inputPhone.toLowerCase().includes(memberPhone.toLowerCase()),
-          // Any 4+ digit sequence match
-          inputDigits.length >= 4 && memberDigits.includes(inputDigits),
-          memberDigits.length >= 4 && inputDigits.includes(memberDigits)
-        ];
-
-        if (matches.some(match => match)) {
-          foundMember = member;
-          console.log('✅ Found matching member:', member.full_name, 'with phone:', member.phone);
-          break;
-        }
-      }
-
-      // Final attempt: super fuzzy search
-      if (!foundMember) {
-        console.log('🔍 Trying fuzzy search...');
-        for (const member of allMembers) {
-          const memberPhone = member.phone.replace(/\D/g, '');
-          const inputClean = inputPhone.replace(/\D/g, '');
-          
-          // Check if any 4+ digit sequence matches
-          if (inputClean.length >= 3 && memberPhone.includes(inputClean)) {
-            foundMember = member;
-            console.log('✅ Found fuzzy match:', member.full_name);
-            break;
-          }
-          
-          if (memberPhone.length >= 4 && inputClean.includes(memberPhone)) {
-            foundMember = member;
-            console.log('✅ Found reverse fuzzy match:', member.full_name);
-            break;
-          }
-        }
-      }
-
-      // Last resort: try matching any 3+ characters
-      if (!foundMember && inputPhone.length >= 3) {
-        console.log('🔍 Last resort search...');
-        for (const member of allMembers) {
-          if (member.phone.toLowerCase().includes(inputPhone.toLowerCase()) ||
-              inputPhone.toLowerCase().includes(member.phone.toLowerCase())) {
-            foundMember = member;
-            console.log('✅ Found last resort match:', member.full_name);
-            break;
-          }
-        }
-      }
+      const foundMember = allMembers.find(member => {
+        const memberDigits = member.phone.replace(/\D/g, '');
+        return memberDigits === inputDigits;
+      });
 
       if (!foundMember) {
         console.error('❌ No matching member found for input:', inputPhone);
